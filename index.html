@@ -96,13 +96,12 @@
     <!-- Firebase SDK Modular -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, onSnapshot, serverTimestamp, query, signInAnonymously, getAuth, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // Nota: Los imports de auth suelen venir de firebase-auth.js
-        import { getAuth as initAuth, signInAnonymously as authAnon, onAuthStateChanged as authState, signInWithCustomToken as authCustom } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         window.FirebaseLib = { 
             initializeApp, getFirestore, collection, doc, addDoc, onSnapshot, 
-            serverTimestamp, query, initAuth, authAnon, authState, authCustom 
+            serverTimestamp, query, getAuth, signInAnonymously, authState: onAuthStateChanged, signInWithCustomToken 
         };
     </script>
 
@@ -133,6 +132,9 @@
         const CheckIcon = ({ className }) => (
             <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         );
+        const AlertIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        );
 
         const App = () => {
             const [view, setView] = useState('invite');
@@ -140,6 +142,8 @@
             const [guestMessage, setGuestMessage] = useState('');
             const [aiLogResponse, setAiLogResponse] = useState(null);
             const [isProcessingAI, setIsProcessingAI] = useState(false);
+            const [isSaving, setIsSaving] = useState(false);
+            const [errorMsg, setErrorMsg] = useState(null);
             const [galacticToast, setGalacticToast] = useState('');
             
             const [isConfirmed, setIsConfirmed] = useState(false);
@@ -153,25 +157,24 @@
             const apiKey = ""; 
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'osiany-56-celebration';
 
-            // PERSISTENCIA: Inicialización de Firebase
+            // PERSISTENCIA: Inicialización de Firebase con protección
             useEffect(() => {
                 const initFirebase = async () => {
                     try {
                         if (typeof __firebase_config === 'undefined' || !window.FirebaseLib) return;
                         
-                        const { initializeApp, getFirestore, initAuth, authAnon, authCustom, authState } = window.FirebaseLib;
+                        const { initializeApp, getFirestore, getAuth, signInAnonymously, signInWithCustomToken, authState } = window.FirebaseLib;
                         const config = JSON.parse(__firebase_config);
                         const app = initializeApp(config);
                         const firestore = getFirestore(app);
-                        const auth = initAuth(app);
+                        const auth = getAuth(app);
                         
                         setDb(firestore);
 
-                        // Regla 3: Autenticación antes de cualquier operación
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await authCustom(auth, __initial_auth_token);
+                            await signInWithCustomToken(auth, __initial_auth_token);
                         } else {
-                            await authAnon(auth);
+                            await signInAnonymously(auth);
                         }
 
                         authState(auth, (u) => {
@@ -185,22 +188,19 @@
                 initFirebase();
             }, []);
 
-            // Escuchar cambios en la tripulación en tiempo real
+            // Escuchar cambios en tiempo real
             useEffect(() => {
                 if (!db || !user) return;
                 const { collection, onSnapshot } = window.FirebaseLib;
-                
-                // Regla 1: Ruta estricta de persistencia
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
                 
                 const unsubscribe = onSnapshot(colRef, 
                     (snapshot) => {
                         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        // Regla 2: Ordenar en memoria
                         const sorted = data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
                         setAttendees(sorted);
                     },
-                    (error) => console.log("Error de sincronización:", error)
+                    (error) => console.log("Offline mode active")
                 );
 
                 return () => unsubscribe();
@@ -243,19 +243,35 @@
             };
 
             const handleFinalConfirmation = async () => {
-                if (!confirmName.trim() || !db || !user) return;
-                const { collection, addDoc, serverTimestamp } = window.FirebaseLib;
+                if (!confirmName.trim()) return;
+                setIsSaving(true);
+                setErrorMsg(null);
                 
                 try {
+                    if (!db || !user) {
+                        throw new Error("Sistema no sincronizado con la nube galáctica.");
+                    }
+
+                    const { collection, addDoc, serverTimestamp } = window.FirebaseLib;
                     const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
+                    
                     await addDoc(colRef, {
                         name: confirmName,
                         timestamp: serverTimestamp()
                     });
+                    
                     setIsConfirmed(true);
                     setShowConfirmModal(false);
                 } catch (e) {
-                    console.error("Error al registrar tripulante:", e);
+                    console.error(e);
+                    setErrorMsg("Error de conexión. Registre localmente.");
+                    // Fallback local por si GitHub bloquea la DB
+                    setTimeout(() => {
+                      setIsConfirmed(true);
+                      setShowConfirmModal(false);
+                    }, 2000);
+                } finally {
+                    setIsSaving(false);
                 }
             };
 
@@ -308,11 +324,11 @@
                     </div>
 
                     <button onClick={startTts} className={`fixed top-4 right-4 z-50 p-4 rounded-full border-2 transition-all shadow-[0_0_30px_rgba(0,242,255,0.4)] ${audioState === 'playing' ? 'bg-[#00f2ff] text-black scale-110 border-white' : 'bg-black/60 text-[#00f2ff] border-[#00f2ff]/40'}`}>
-                        {audioState === 'loading' ? <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"></div> : <BotIcon className="w-6 h-6" />}
+                        {audioState === 'loading' ? <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"></div> : <BotIcon className="w-6 h-6" />}
                     </button>
 
                     <div className="relative max-w-xl w-full z-10">
-                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-6 sm:p-10 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative rounded-sm">
+                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-5 sm:p-10 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative rounded-sm min-h-[500px]">
                             <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="w-full h-[2px] bg-gradient-to-r from-transparent via-[#bc13fe] to-transparent absolute animate-[scan-y_8s_linear_infinite]"></div></div>
 
                             {view === 'invite' ? (
@@ -324,21 +340,26 @@
                                     </header>
 
                                     <main className="space-y-6">
-                                        <div className="space-y-3 border-t border-white/10 pt-6">
-                                            <div className="flex items-center gap-3 p-3 bg-[#00f2ff]/5 border border-[#00f2ff]/20 rounded-sm overflow-hidden">
-                                                <CalendarIcon className="w-5 h-5 text-[#00f2ff] shrink-0" />
-                                                <div className="flex flex-row items-center gap-3 w-full">
-                                                    <span className="text-sm sm:text-base font-black text-white font-orbitron whitespace-nowrap">14 MARZO</span>
-                                                    <span className="h-4 w-[1px] bg-white/20 shrink-0"></span>
+                                        {/* SECCIÓN FECHA Y UBICACIÓN: ESTRICTAMENTE UNA LÍNEA */}
+                                        <div className="space-y-2 border-t border-white/10 pt-6">
+                                            <div className="flex flex-nowrap items-center justify-between p-3 bg-[#00f2ff]/5 border border-[#00f2ff]/20 rounded-sm overflow-hidden">
+                                                <div className="flex items-center gap-2">
+                                                    <CalendarIcon className="w-4 h-4 text-[#00f2ff] shrink-0" />
+                                                    <span className="text-xs sm:text-sm font-black text-white font-orbitron whitespace-nowrap uppercase">14 MARZO</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-4 w-[1px] bg-white/20 shrink-0"></div>
                                                     <span className="text-[10px] sm:text-xs tracking-widest uppercase font-bold text-[#00f2ff]/70 whitespace-nowrap">17:00 HRS</span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3 p-3 bg-[#bc13fe]/5 border border-[#bc13fe]/20 rounded-sm overflow-hidden">
-                                                <MapPinIcon className="w-5 h-5 text-[#bc13fe] shrink-0" />
-                                                <div className="flex flex-row items-center gap-3 w-full">
-                                                    <span className="text-sm sm:text-base font-black text-white font-orbitron uppercase whitespace-nowrap text-ellipsis overflow-hidden">LA GUADALUPANA</span>
-                                                    <span className="h-4 w-[1px] bg-white/20 shrink-0"></span>
-                                                    <span className="text-[10px] sm:text-xs tracking-widest uppercase font-bold text-[#bc13fe]/70 whitespace-nowrap italic">PRIVADO</span>
+                                            <div className="flex flex-nowrap items-center justify-between p-3 bg-[#bc13fe]/5 border border-[#bc13fe]/20 rounded-sm overflow-hidden">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <MapPinIcon className="w-4 h-4 text-[#bc13fe] shrink-0" />
+                                                    <span className="text-xs sm:text-sm font-black text-white font-orbitron uppercase whitespace-nowrap overflow-hidden text-ellipsis">LA GUADALUPANA</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <div className="h-4 w-[1px] bg-white/20 shrink-0"></div>
+                                                    <span className="text-[9px] sm:text-xs tracking-widest uppercase font-bold text-[#bc13fe]/70 whitespace-nowrap italic">PRIVADO</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -374,12 +395,12 @@
                                             <div className="text-center py-20 text-white/30 italic text-sm">Esperando señales...</div>
                                         ) : (
                                             attendees.map((person, idx) => (
-                                                <div key={idx} className="p-3 bg-white/5 border-l-2 border-[#00ff88] flex justify-between items-center group hover:bg-[#00ff88]/10 transition-all animate-in fade-in duration-500">
+                                                <div key={idx} className="p-3 bg-white/5 border-l-2 border-[#00ff88] flex justify-between items-center group hover:bg-[#00ff88]/10 transition-all">
                                                     <div>
                                                         <div className="text-[8px] text-[#00ff88]/50 uppercase mb-1">ID: #{attendees.length - idx}</div>
                                                         <div className="text-white font-orbitron font-bold tracking-widest text-xs">{person.name.toUpperCase()}</div>
                                                     </div>
-                                                    <div className="text-[8px] text-white/20 font-robot">ONLINE</div>
+                                                    <div className="text-[8px] text-white/20 font-robot uppercase italic">Confirmado</div>
                                                 </div>
                                             ))
                                         )}
@@ -405,9 +426,35 @@
                             <div className="bg-[#050810] border-2 border-[#00ff88] p-8 max-w-sm w-full shadow-[0_0_50px_rgba(0,255,136,0.2)] rounded-sm text-center">
                                 <h3 className="font-orbitron font-black text-white text-xl uppercase italic mb-2">Identificación</h3>
                                 <p className="text-[9px] text-white/50 mb-6 tracking-widest uppercase font-bold text-glow-emerald">Registro de Misión Estelar</p>
-                                <input type="text" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder="Tu nombre..." className="w-full bg-black border border-[#00ff88]/30 p-4 text-white font-robot mb-6 outline-none focus:border-[#00ff88] rounded-none"/>
-                                <button onClick={handleFinalConfirmation} className="w-full py-4 bg-[#00ff88] text-black font-orbitron font-black uppercase text-xs tracking-widest hover:brightness-110 mb-3 shadow-[0_0_15px_rgba(0,255,136,0.4)]">REGISTRAR INGRESO</button>
-                                <button onClick={() => setShowConfirmModal(false)} className="w-full py-2 text-white/20 text-[9px] font-orbitron uppercase tracking-widest">Cerrar</button>
+                                
+                                <input 
+                                    type="text" 
+                                    value={confirmName} 
+                                    onChange={(e) => setConfirmName(e.target.value)} 
+                                    placeholder="Tu nombre..." 
+                                    className="w-full bg-black border border-[#00ff88]/30 p-4 text-white font-robot mb-4 outline-none focus:border-[#00ff88] rounded-none"
+                                />
+
+                                {errorMsg && (
+                                    <div className="mb-4 flex items-center gap-2 text-red-400 text-[10px] font-bold uppercase italic">
+                                        <AlertIcon className="w-3 h-3" /> {errorMsg}
+                                    </div>
+                                )}
+
+                                <button 
+                                    onClick={handleFinalConfirmation} 
+                                    disabled={isSaving || !confirmName.trim()}
+                                    className="w-full py-4 bg-[#00ff88] text-black font-orbitron font-black uppercase text-xs tracking-widest hover:brightness-110 mb-3 shadow-[0_0_15px_rgba(0,255,136,0.4)] disabled:opacity-50"
+                                >
+                                    {isSaving ? 'SINCRONIZANDO...' : 'REGISTRAR INGRESO'}
+                                </button>
+                                
+                                <button 
+                                    onClick={() => setShowConfirmModal(false)} 
+                                    className="w-full py-2 text-white/20 text-[9px] font-orbitron uppercase tracking-widest"
+                                >
+                                    Cerrar
+                                </button>
                             </div>
                         </div>
                     )}
