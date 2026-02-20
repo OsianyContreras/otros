@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osiany 56 - Neural Era Celebration</title>
+    <!-- Fuentes Futuristas -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React y Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --neon-cyan: #00f2ff;
+            --neon-purple: #bc13fe;
+            --neon-emerald: #00ff88;
+        }
+        body { margin: 0; background: #010206; overflow-x: hidden; font-family: 'Share Tech Mono', monospace; }
+        
+        /* Deriva cósmica constante */
+        @keyframes cosmic-drift {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-20px, 15px) scale(1.05); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        @keyframes twinkle { 
+            0%, 100% { opacity: 0.3; transform: scale(1); } 
+            50% { opacity: 1; transform: scale(1.2); } 
+        }
+        
+        @keyframes scan-y { 0% { top: -10%; } 100% { top: 110%; } }
+        
+        /* Estrellas fugaces cinematográficas */
+        @keyframes shooting-star {
+            0% { transform: translateX(0) translateY(0) rotate(-45deg) scale(0); opacity: 0; }
+            5% { opacity: 1; scale: 1; }
+            20% { opacity: 1; }
+            35% { transform: translateX(-1200px) translateY(1200px) rotate(-45deg) scale(0.5); opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        .shooting-star {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(-45deg, var(--neon-cyan), rgba(0,0,0,0));
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
+            pointer-events: none;
+            opacity: 0;
+        }
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            width: 8px; height: 8px; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-purple);
+            top: 50%; transform: translateY(-50%);
+        }
+
+        .gradient-text-ai {
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-emerald), var(--neon-cyan));
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-flow 5s linear infinite;
+        }
+        @keyframes gradient-flow { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+
+        .toast-container {
+            background: rgba(188, 19, 254, 0.15);
+            border: 1px dashed rgba(188, 19, 254, 0.6);
+            box-shadow: inset 0 0 25px rgba(188, 19, 254, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // Iconos SVG Integrados
+        const BotIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+        );
+        const CalendarIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        );
+        const MapPinIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        );
+        const TerminalIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        );
+        const RocketIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"/><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"/></svg>
+        );
+        const CheckIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        );
+
+        const App = () => {
+            const [audioState, setAudioState] = useState('idle');
+            const [guestMessage, setGuestMessage] = useState('');
+            const [aiLogResponse, setAiLogResponse] = useState(null);
+            const [isProcessingAI, setIsProcessingAI] = useState(false);
+            const [galacticToast, setGalacticToast] = useState('');
+            const [isConfirmed, setIsConfirmed] = useState(false);
+            const [confirmationMsg, setConfirmationMsg] = useState('');
+            const audioRef = useRef(null);
+            const apiKey = ""; // Se inyecta automáticamente
+
+            const invitationText = `Protocolo iniciado. Osiany, cincuenta y seis ciclos completados. Encuentro en sector Guadalupana, catorce de marzo, diecisiete horas. El sistema de inteligencia artificial está listo.`;
+
+            // Gemini API Call
+            const callGemini = async (prompt, systemInstruction = "") => {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+                };
+                let retries = 0;
+                while (retries < 3) {
+                    try {
+                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (res.ok) {
+                            const data = await res.json();
+                            return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        }
+                    } catch (e) {}
+                    retries++;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+                return null;
+            };
+
+            const processLog = async () => {
+                if (!guestMessage.trim()) return;
+                setIsProcessingAI(true);
+                const res = await callGemini(`Un invitado envió: "${guestMessage}". Responde como una IA espacial asignando un rango galáctico divertido. Máximo 15 palabras.`, "IA Estación Osiany.");
+                setAiLogResponse(res);
+                setIsProcessingAI(false);
+            };
+
+            const handleToast = async () => {
+                setIsProcessingAI(true);
+                const res = await callGemini("Genera un brindis corto y épico para Osiany que celebra sus 56 años.", "Poeta robótico.");
+                setGalacticToast(res);
+                setIsProcessingAI(false);
+            };
+
+            const confirmAttendance = () => {
+                if (isConfirmed) return;
+                const msgs = ["Sincronización completa. Tu señal ha sido registrada.", "¡Handshake exitoso! Nos vemos en el sector Guadalupana.", "Misión aceptada. Tu presencia iluminará la estación."];
+                setConfirmationMsg(msgs[Math.floor(Math.random() * msgs.length)]);
+                setIsConfirmed(true);
+            };
+
+            const pcmToWav = (pcmData) => {
+                const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+                const view = new DataView(buffer);
+                const writeS = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+                writeS(0, 'RIFF'); view.setUint32(4, 32 + pcmData.length * 2, true);
+                writeS(8, 'WAVE'); writeS(12, 'fmt '); view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, 24000, true);
+                view.setUint32(28, 48000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+                writeS(36, 'data'); view.setUint32(40, pcmData.length * 2, true);
+                for (let i = 0; i < pcmData.length; i++) view.setInt16(44 + (i * 2), pcmData[i], true);
+                return new Blob([buffer], { type: 'audio/wav' });
+            };
+
+            const startTts = async () => {
+                if (audioState === 'playing') return;
+                setAudioState('loading');
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: `Say in a calm, futuristic robotic voice: ${invitationText}` }] }],
+                            generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } } }
+                        })
+                    });
+                    const data = await res.json();
+                    const audioStr = data.candidates[0].content.parts[0].inlineData.data;
+                    const binary = atob(audioStr);
+                    const pcm = new Int16Array(binary.length / 2);
+                    for (let i = 0; i < pcm.length; i++) pcm[i] = (binary.charCodeAt(i * 2 + 1) << 8) | binary.charCodeAt(i * 2);
+                    const url = URL.createObjectURL(pcmToWav(pcm));
+                    if (audioRef.current) {
+                        audioRef.current.src = url; audioRef.current.play(); setAudioState('playing');
+                        audioRef.current.onended = () => { setAudioState('idle'); URL.revokeObjectURL(url); };
+                    }
+                } catch (e) { setAudioState('idle'); }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden relative text-[#b0fbff]">
+                    {/* Cosmos siempre activo */}
+                    <div className="fixed inset-0 pointer-events-none" style={{ animation: 'cosmic-drift 30s ease-in-out infinite' }}>
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(188,19,254,0.1)_0%,transparent_80%)]"></div>
+                        {[...Array(50)].map((_, i) => (
+                            <div key={i} className="absolute rounded-full bg-white animate-twinkle" style={{ width: Math.random() * 3 + 'px', height: Math.random() * 3 + 'px', top: Math.random() * 100 + '%', left: Math.random() * 100 + '%', animationDuration: Math.random() * 3 + 1 + 's' }}></div>
+                        ))}
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="shooting-star" style={{ width: '200px', top: Math.random() * 70 + '%', left: '100%', animation: `shooting-star ${Math.random() * 5 + 4}s linear infinite`, animationDelay: Math.random() * 10 + 's' }}></div>
+                        ))}
+                    </div>
+
+                    {/* Botón IA Robot */}
+                    <button onClick={startTts} className={`fixed top-6 right-6 z-50 p-5 rounded-full border-2 transition-all shadow-[0_0_30px_rgba(0,242,255,0.4)] ${audioState === 'playing' ? 'bg-[#00f2ff] text-black scale-110 border-white' : 'bg-black/60 text-[#00f2ff] border-[#00f2ff]/40'}`}>
+                        {audioState === 'loading' ? <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"></div> : <BotIcon className="w-7 h-7" />}
+                    </button>
+
+                    {/* Contenedor Principal */}
+                    <div className="relative max-w-xl w-full z-10">
+                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-8 sm:p-12 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative">
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="w-full h-[2px] bg-gradient-to-r from-transparent via-[#bc13fe] to-transparent absolute animate-[scan-y_8s_linear_infinite]"></div></div>
+
+                            <header className="text-center mb-10">
+                                <p className="text-[#00f2ff] tracking-[1em] text-[10px] uppercase font-bold mb-4">Celebration Mode</p>
+                                <h1 className="text-6xl sm:text-8xl font-orbitron font-black tracking-tighter mb-4"><span className="gradient-text-ai">OSIANY</span></h1>
+                                <div className="text-[14px] font-orbitron tracking-[0.5em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-2 px-8 inline-block bg-purple-900/10 shadow-[0_0_15px_rgba(188,19,254,0.3)] font-bold">EDAD: 56</div>
+                            </header>
+
+                            <main className="space-y-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/10 pt-6">
+                                    <div className="p-4 bg-[#00f2ff]/5 border border-[#00f2ff]/20"><CalendarIcon className="w-6 h-6 text-[#00f2ff] mb-2"/><p className="text-2xl font-black text-white font-orbitron">14.MARZO</p><p className="text-[10px] tracking-widest uppercase">17:00 HRS</p></div>
+                                    <div className="p-4 bg-[#bc13fe]/5 border border-[#bc13fe]/20"><MapPinIcon className="w-6 h-6 text-[#bc13fe] mb-2"/><p className="text-2xl font-black text-white font-orbitron uppercase">GUADALUPANA</p><p className="text-[10px] tracking-widest uppercase">PRIVADO</p></div>
+                                </div>
+
+                                <div className="bg-black/60 border border-[#00f2ff]/30 p-5 space-y-4">
+                                    <div className="flex items-center gap-2 text-[#00ff88] text-[10px] font-bold tracking-widest"><TerminalIcon className="w-4 h-4"/>MANDALE AL FESTEJADO UN MENSAJE</div>
+                                    <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="Inyectar mensaje..." className="w-full bg-black/80 border border-[#00f2ff]/20 p-3 text-sm focus:border-[#00f2ff] outline-none text-white font-robot"/>
+                                    <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-2 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88]">PROCESAR LOG</button>
+                                    {aiLogResponse && <div className="text-[11px] text-[#00ff88] italic p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 animate-pulse">{aiLogResponse}</div>}
+                                </div>
+
+                                <div className="bg-black/60 border border-[#bc13fe]/30 p-5 space-y-4 toast-container">
+                                    <div className="flex items-center gap-2 text-[#bc13fe] text-[10px] font-bold tracking-widest"><RocketIcon className="w-4 h-4"/>GENERADOR DE BRINDIS NEURAL</div>
+                                    <button onClick={handleToast} disabled={isProcessingAI} className="w-full py-2 border border-[#bc13fe]/50 text-[#bc13fe] font-orbitron font-black tracking-widest text-[10px] hover:bg-[#bc13fe] hover:text-white transition-all">SINCRONIZAR BRINDIS</button>
+                                    {galacticToast && <div className="mt-4 text-[14px] italic text-white/90 p-4 font-robot border-l-4 border-[#bc13fe] bg-purple-900/10 leading-relaxed">{galacticToast}</div>}
+                                </div>
+
+                                <button onClick={confirmAttendance} disabled={isConfirmed} className={`w-full py-5 font-orbitron font-black text-[13px] tracking-[0.8em] transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 ${isConfirmed ? 'bg-gray-800 text-gray-500 border-gray-700 opacity-60' : 'bg-white text-black hover:bg-[#00f2ff]'}`}>
+                                    {isConfirmed && <CheckIcon className="w-5 h-5 text-[#00ff88]"/>} {isConfirmed ? 'ASISTENCIA REGISTRADA' : 'CONFIRMAR ASISTENCIA'}
+                                </button>
+                                {isConfirmed && <div className="p-4 bg-[#00ff88]/5 border border-[#00ff88]/30 text-[#00ff88] font-robot text-xs italic animate-bounce">{confirmationMsg}</div>}
+                            </main>
+                            <footer className="mt-10 pt-6 border-t border-white/10 text-center opacity-40 text-[9px] tracking-[1.5em] uppercase text-[#00f2ff]">OSIANY 56 // 2025</footer>
+                        </div>
+                    </div>
+                    <audio ref={audioRef} style={{ display: 'none' }} />
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
