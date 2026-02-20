@@ -93,10 +93,18 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDKs cargados de forma tradicional -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <!-- Firebase SDK Modular -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, serverTimestamp, query, signInAnonymously, getAuth, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Nota: Los imports de auth suelen venir de firebase-auth.js
+        import { getAuth as initAuth, signInAnonymously as authAnon, onAuthStateChanged as authState, signInWithCustomToken as authCustom } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        window.FirebaseLib = { 
+            initializeApp, getFirestore, collection, doc, addDoc, onSnapshot, 
+            serverTimestamp, query, initAuth, authAnon, authState, authCustom 
+        };
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
@@ -139,28 +147,64 @@
             const [showConfirmModal, setShowConfirmModal] = useState(false);
             const [attendees, setAttendees] = useState([]);
             const [db, setDb] = useState(null);
+            const [user, setUser] = useState(null);
 
             const audioRef = useRef(null);
             const apiKey = ""; 
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'osiany-56-celebration';
 
+            // PERSISTENCIA: Inicialización de Firebase
             useEffect(() => {
-                try {
-                    if (typeof __firebase_config !== 'undefined' && window.firebase) {
+                const initFirebase = async () => {
+                    try {
+                        if (typeof __firebase_config === 'undefined' || !window.FirebaseLib) return;
+                        
+                        const { initializeApp, getFirestore, initAuth, authAnon, authCustom, authState } = window.FirebaseLib;
                         const config = JSON.parse(__firebase_config);
-                        if (!firebase.apps.length) firebase.initializeApp(config);
-                        const firestore = firebase.firestore();
+                        const app = initializeApp(config);
+                        const firestore = getFirestore(app);
+                        const auth = initAuth(app);
+                        
                         setDb(firestore);
-                        firebase.auth().signInAnonymously().then(() => {
-                            const colRef = firestore.collection('artifacts').doc(appId).collection('public').doc('data').collection('confirmations');
-                            colRef.onSnapshot((snapshot) => {
-                                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                setAttendees(data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)));
-                            });
+
+                        // Regla 3: Autenticación antes de cualquier operación
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await authCustom(auth, __initial_auth_token);
+                        } else {
+                            await authAnon(auth);
+                        }
+
+                        authState(auth, (u) => {
+                            setUser(u);
                         });
+
+                    } catch (e) {
+                        console.error("Error de enlace estelar:", e);
                     }
-                } catch (e) { console.error(e); }
+                };
+                initFirebase();
             }, []);
+
+            // Escuchar cambios en la tripulación en tiempo real
+            useEffect(() => {
+                if (!db || !user) return;
+                const { collection, onSnapshot } = window.FirebaseLib;
+                
+                // Regla 1: Ruta estricta de persistencia
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
+                
+                const unsubscribe = onSnapshot(colRef, 
+                    (snapshot) => {
+                        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        // Regla 2: Ordenar en memoria
+                        const sorted = data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                        setAttendees(sorted);
+                    },
+                    (error) => console.log("Error de sincronización:", error)
+                );
+
+                return () => unsubscribe();
+            }, [db, user, appId]);
 
             const callGemini = async (prompt, systemInstruction = "") => {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -193,23 +237,26 @@
 
             const handleToast = async () => {
                 setIsProcessingAI(true);
-                const res = await callGemini("Genera un brindis corto y épico para Osiany que celebra sus 56 años.", "Poeta robótico.");
+                const res = await callGemini("Genera un brindis corto y épico para Osiany que celebra sus 56 años.", "Eres un poeta robótico.");
                 setGalacticToast(res);
                 setIsProcessingAI(false);
             };
 
             const handleFinalConfirmation = async () => {
-                if (!confirmName.trim()) return;
-                if (db) {
-                    try {
-                        const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('confirmations');
-                        await colRef.add({ name: confirmName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                    } catch (e) { console.log(e); }
-                } else {
-                    setAttendees([{ id: Date.now(), name: confirmName }, ...attendees]);
+                if (!confirmName.trim() || !db || !user) return;
+                const { collection, addDoc, serverTimestamp } = window.FirebaseLib;
+                
+                try {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
+                    await addDoc(colRef, {
+                        name: confirmName,
+                        timestamp: serverTimestamp()
+                    });
+                    setIsConfirmed(true);
+                    setShowConfirmModal(false);
+                } catch (e) {
+                    console.error("Error al registrar tripulante:", e);
                 }
-                setIsConfirmed(true);
-                setShowConfirmModal(false);
             };
 
             const pcmToWav = (pcmData) => {
@@ -233,7 +280,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `Di con voz robótica: Protocolo iniciado. Osiany, cincuenta y seis ciclos completados. Sistema activo.` }] }],
+                            contents: [{ parts: [{ text: `Di con voz robótica: Protocolo iniciado. Osiany, cincuenta y seis ciclos completados. Sistema de tripulación activo.` }] }],
                             generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }
                         })
                     });
@@ -277,7 +324,6 @@
                                     </header>
 
                                     <main className="space-y-6">
-                                        {/* SECCIÓN FECHA Y UBICACIÓN CORREGIDA A UNA LÍNEA */}
                                         <div className="space-y-3 border-t border-white/10 pt-6">
                                             <div className="flex items-center gap-3 p-3 bg-[#00f2ff]/5 border border-[#00f2ff]/20 rounded-sm overflow-hidden">
                                                 <CalendarIcon className="w-5 h-5 text-[#00f2ff] shrink-0" />
@@ -287,11 +333,10 @@
                                                     <span className="text-[10px] sm:text-xs tracking-widest uppercase font-bold text-[#00f2ff]/70 whitespace-nowrap">17:00 HRS</span>
                                                 </div>
                                             </div>
-
                                             <div className="flex items-center gap-3 p-3 bg-[#bc13fe]/5 border border-[#bc13fe]/20 rounded-sm overflow-hidden">
                                                 <MapPinIcon className="w-5 h-5 text-[#bc13fe] shrink-0" />
                                                 <div className="flex flex-row items-center gap-3 w-full">
-                                                    <span className="text-sm sm:text-base font-black text-white font-orbitron uppercase whitespace-nowrap">LA GUADALUPANA</span>
+                                                    <span className="text-sm sm:text-base font-black text-white font-orbitron uppercase whitespace-nowrap text-ellipsis overflow-hidden">LA GUADALUPANA</span>
                                                     <span className="h-4 w-[1px] bg-white/20 shrink-0"></span>
                                                     <span className="text-[10px] sm:text-xs tracking-widest uppercase font-bold text-[#bc13fe]/70 whitespace-nowrap italic">PRIVADO</span>
                                                 </div>
@@ -301,7 +346,7 @@
                                         <div className="bg-black/60 border border-[#00f2ff]/30 p-4 space-y-4 rounded-sm">
                                             <div className="flex items-center gap-2 text-[#00ff88] text-[9px] font-bold tracking-widest uppercase"><TerminalIcon className="w-4 h-4"/>MANDALE AL FESTEJADO UN MENSAJE</div>
                                             <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="Inyectar datos..." className="w-full bg-black/80 border border-[#00f2ff]/20 p-3 text-sm focus:border-[#00f2ff] outline-none text-white font-robot"/>
-                                            <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-2 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88]">PROCESAR LOG</button>
+                                            <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-3 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88]">PROCESAR LOG</button>
                                             {aiLogResponse && <div className="text-[11px] text-[#00ff88] italic p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 animate-pulse">{aiLogResponse}</div>}
                                         </div>
 
@@ -326,10 +371,10 @@
                                     </header>
                                     <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
                                         {attendees.length === 0 ? (
-                                            <div className="text-center py-20 text-white/20 italic text-sm">Esperando señales...</div>
+                                            <div className="text-center py-20 text-white/30 italic text-sm">Esperando señales...</div>
                                         ) : (
                                             attendees.map((person, idx) => (
-                                                <div key={idx} className="p-3 bg-white/5 border-l-2 border-[#00ff88] flex justify-between items-center group hover:bg-[#00ff88]/10 transition-all">
+                                                <div key={idx} className="p-3 bg-white/5 border-l-2 border-[#00ff88] flex justify-between items-center group hover:bg-[#00ff88]/10 transition-all animate-in fade-in duration-500">
                                                     <div>
                                                         <div className="text-[8px] text-[#00ff88]/50 uppercase mb-1">ID: #{attendees.length - idx}</div>
                                                         <div className="text-white font-orbitron font-bold tracking-widest text-xs">{person.name.toUpperCase()}</div>
@@ -350,7 +395,7 @@
                         <button onClick={() => setView('invite')} className={`nav-button flex items-center gap-2 px-6 py-3 rounded-full ${view === 'invite' ? 'bg-[#00f2ff] text-black font-black' : 'text-[#00f2ff] hover:bg-white/5'}`}>
                             <HomeIcon className="w-4 h-4"/> <span className="text-[9px] font-orbitron uppercase tracking-widest">Invitación</span>
                         </button>
-                        <button onClick={() => setView('crew')} className={`nav-button flex items-center gap-2 px-6 py-3 rounded-full ${view === 'crew' ? 'bg-[#00ff88] text-black font-black' : 'text-[#00ff88] hover:bg-white/5'}`}>
+                        <button onClick={() => setView('crew')} className={`nav-button flex items-center gap-2 px-6 py-3 rounded-full ${view === 'crew' ? 'bg-[#00ff88] text-black font-black shadow-[0_0_15px_rgba(0,255,136,0.3)]' : 'text-[#00ff88] hover:bg-white/5'}`}>
                             <UsersIcon className="w-4 h-4"/> <span className="text-[9px] font-orbitron uppercase tracking-widest">Tripulación</span>
                         </button>
                     </nav>
@@ -359,9 +404,9 @@
                         <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
                             <div className="bg-[#050810] border-2 border-[#00ff88] p-8 max-w-sm w-full shadow-[0_0_50px_rgba(0,255,136,0.2)] rounded-sm text-center">
                                 <h3 className="font-orbitron font-black text-white text-xl uppercase italic mb-2">Identificación</h3>
-                                <p className="text-[9px] text-white/50 mb-6 tracking-widest uppercase">Registro de Misión Estelar</p>
+                                <p className="text-[9px] text-white/50 mb-6 tracking-widest uppercase font-bold text-glow-emerald">Registro de Misión Estelar</p>
                                 <input type="text" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder="Tu nombre..." className="w-full bg-black border border-[#00ff88]/30 p-4 text-white font-robot mb-6 outline-none focus:border-[#00ff88] rounded-none"/>
-                                <button onClick={handleFinalConfirmation} className="w-full py-4 bg-[#00ff88] text-black font-orbitron font-black uppercase text-xs tracking-widest hover:brightness-110 mb-3">REGISTRAR INGRESO</button>
+                                <button onClick={handleFinalConfirmation} className="w-full py-4 bg-[#00ff88] text-black font-orbitron font-black uppercase text-xs tracking-widest hover:brightness-110 mb-3 shadow-[0_0_15px_rgba(0,255,136,0.4)]">REGISTRAR INGRESO</button>
                                 <button onClick={() => setShowConfirmModal(false)} className="w-full py-2 text-white/20 text-[9px] font-orbitron uppercase tracking-widest">Cerrar</button>
                             </div>
                         </div>
