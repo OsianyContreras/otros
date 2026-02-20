@@ -14,12 +14,21 @@
 
     <!-- Fuentes Futuristas -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
+    
+    <!-- Scripts Base -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React y Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase SDK (Necesario para la lista de confirmados) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        window.fb = { initializeApp, getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, getAuth, signInAnonymously, onAuthStateChanged };
+    </script>
 
     <style>
         :root {
@@ -29,7 +38,6 @@
         }
         body { margin: 0; background: #010206; overflow-x: hidden; font-family: 'Share Tech Mono', monospace; }
         
-        /* Deriva cósmica constante */
         @keyframes cosmic-drift {
             0% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(-20px, 15px) scale(1.05); }
@@ -43,7 +51,6 @@
         
         @keyframes scan-y { 0% { top: -10%; } 100% { top: 110%; } }
         
-        /* Cinematic shooting stars */
         @keyframes shooting-star {
             0% { transform: translateX(0) translateY(0) rotate(-45deg) scale(0); opacity: 0; }
             5% { opacity: 1; scale: 1; }
@@ -83,7 +90,6 @@
             box-shadow: inset 0 0 25px rgba(188, 19, 254, 0.2);
         }
 
-        /* Scrollbar estética */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #010206; }
         ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 2px; }
@@ -111,22 +117,71 @@
         const RocketIcon = ({ className }) => (
             <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"/><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"/></svg>
         );
-        const CheckIcon = ({ className }) => (
-            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        const UsersIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        );
+        const HomeIcon = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         );
 
         const App = () => {
+            const [view, setView] = useState('invite'); // 'invite' o 'crew'
             const [audioState, setAudioState] = useState('idle');
             const [guestMessage, setGuestMessage] = useState('');
             const [aiLogResponse, setAiLogResponse] = useState(null);
             const [isProcessingAI, setIsProcessingAI] = useState(false);
             const [galacticToast, setGalacticToast] = useState('');
+            
             const [isConfirmed, setIsConfirmed] = useState(false);
-            const [confirmationMsg, setConfirmationMsg] = useState('');
+            const [confirmName, setConfirmName] = useState('');
+            const [showConfirmModal, setShowConfirmModal] = useState(false);
+            const [attendees, setAttendees] = useState([]);
+            const [user, setUser] = useState(null);
+            const [db, setDb] = useState(null);
+
             const audioRef = useRef(null);
             const apiKey = ""; 
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'osiany-56';
 
-            const invitationText = `Protocolo iniciado. Osiany, cincuenta y seis ciclos completados. Encuentro en sector Guadalupana, catorce de marzo, diecisiete horas. El sistema de inteligencia artificial está activado. Proceda con su mensaje.`;
+            const invitationText = `Protocolo iniciado. Osiany, cincuenta y seis ciclos completados. Encuentro en sector Guadalupana, catorce de marzo, diecisiete horas. Sistema de tripulación activo.`;
+
+            // Firebase Initialization
+            useEffect(() => {
+                if (!window.fb) return;
+                const { initializeApp, getFirestore, getAuth, signInAnonymously, onAuthStateChanged, collection, onSnapshot, query } = window.fb;
+                
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const firestore = getFirestore(app);
+                setDb(firestore);
+
+                const initAuth = async () => {
+                    await signInAnonymously(auth);
+                };
+                initAuth();
+
+                const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                });
+
+                return () => unsubscribeAuth();
+            }, []);
+
+            // Real-time listener for Attendees
+            useEffect(() => {
+                if (!db || !user) return;
+                const { collection, onSnapshot, query } = window.fb;
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
+                
+                const unsubscribe = onSnapshot(colRef, (snapshot) => {
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    // Ordenar por fecha en memoria (Regla 2)
+                    setAttendees(data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)));
+                }, (error) => console.error("Firestore Error:", error));
+
+                return () => unsubscribe();
+            }, [db, user, appId]);
 
             const callGemini = async (prompt, systemInstruction = "") => {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -159,20 +214,26 @@
 
             const handleToast = async () => {
                 setIsProcessingAI(true);
-                const res = await callGemini("Genera un brindis corto y épico para Osiany que celebra sus 56 años.", "Eres un poeta robótico.");
+                const res = await callGemini("Genera un brindis corto y épico para Osiany que celebra sus 56 años.", "Poeta robótico.");
                 setGalacticToast(res);
                 setIsProcessingAI(false);
             };
 
-            const confirmAttendance = () => {
-                if (isConfirmed) return;
-                const msgs = [
-                    "Sincronización completa. Tu señal ha sido registrada en el núcleo de datos.",
-                    "¡Handshake exitoso! Nos vemos en el sector Guadalupana.",
-                    "Misión aceptada. Tu presencia iluminará la estación galáctica."
-                ];
-                setConfirmationMsg(msgs[Math.floor(Math.random() * msgs.length)]);
-                setIsConfirmed(true);
+            const handleFinalConfirmation = async () => {
+                if (!confirmName.trim() || !db || !user) return;
+                const { collection, addDoc, serverTimestamp } = window.fb;
+                
+                try {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
+                    await addDoc(colRef, {
+                        name: confirmName,
+                        timestamp: serverTimestamp()
+                    });
+                    setIsConfirmed(true);
+                    setShowConfirmModal(false);
+                } catch (e) {
+                    console.error("Error al registrar:", e);
+                }
             };
 
             const pcmToWav = (pcmData) => {
@@ -207,19 +268,17 @@
                     for (let i = 0; i < pcm.length; i++) pcm[i] = (binary.charCodeAt(i * 2 + 1) << 8) | binary.charCodeAt(i * 2);
                     const url = URL.createObjectURL(pcmToWav(pcm));
                     if (audioRef.current) {
-                        audioRef.current.src = url; 
-                        audioRef.current.play(); 
-                        setAudioState('playing');
+                        audioRef.current.src = url; audioRef.current.play(); setAudioState('playing');
                         audioRef.current.onended = () => { setAudioState('idle'); URL.revokeObjectURL(url); };
                     }
                 } catch (e) { setAudioState('idle'); }
             };
 
             return (
-                <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 overflow-hidden relative text-[#b0fbff]">
+                <div className="min-h-screen flex flex-col items-center justify-center p-3 sm:p-4 overflow-hidden relative text-[#b0fbff] pb-24">
                     {/* Cosmos Engine */}
                     <div className="fixed inset-0 pointer-events-none" style={{ animation: 'cosmic-drift 30s ease-in-out infinite' }}>
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(188,19,254,0.1)_0%,transparent_80%)]"></div>
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(188,19,254,0.15)_0%,transparent_80%)]"></div>
                         {[...Array(50)].map((_, i) => (
                             <div key={i} className="absolute rounded-full bg-white animate-twinkle shadow-[0_0_5px_#fff]" style={{ width: Math.random() * 3 + 'px', height: Math.random() * 3 + 'px', top: Math.random() * 100 + '%', left: Math.random() * 100 + '%', animationDuration: Math.random() * 3 + 1 + 's' }}></div>
                         ))}
@@ -233,58 +292,136 @@
                         {audioState === 'loading' ? <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-t-transparent rounded-full animate-spin"></div> : <BotIcon className="w-6 h-6 sm:w-7 sm:h-7" />}
                     </button>
 
-                    {/* Main UI Card */}
+                    {/* MAIN CONTENT AREA */}
                     <div className="relative max-w-xl w-full z-10">
-                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-6 sm:p-12 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative rounded-sm">
+                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-6 sm:p-12 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative rounded-sm min-h-[600px]">
                             <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="w-full h-[2px] bg-gradient-to-r from-transparent via-[#bc13fe] to-transparent absolute animate-[scan-y_8s_linear_infinite]"></div></div>
 
-                            <header className="text-center mb-8 sm:mb-10">
-                                <p className="text-[#00f2ff] tracking-[0.6em] sm:tracking-[1em] text-[9px] sm:text-[10px] uppercase font-bold mb-3">Celebration Sequence Initiated</p>
-                                <h1 className="text-5xl sm:text-8xl font-orbitron font-black tracking-tighter mb-4"><span className="gradient-text-ai">OSIANY</span></h1>
-                                <div className="text-[12px] sm:text-[14px] font-orbitron tracking-[0.4em] sm:tracking-[0.5em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-2 px-6 inline-block bg-purple-900/10 shadow-[0_0_15px_rgba(188,19,254,0.3)] font-bold uppercase">Ciclos: 56</div>
-                            </header>
+                            {view === 'invite' ? (
+                                <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                                    <header className="text-center mb-8 sm:mb-10">
+                                        <p className="text-[#00f2ff] tracking-[0.6em] sm:tracking-[1em] text-[9px] sm:text-[10px] uppercase font-bold mb-3">Celebration Sequence Initiated</p>
+                                        <h1 className="text-5xl sm:text-8xl font-orbitron font-black tracking-tighter mb-4"><span className="gradient-text-ai">OSIANY</span></h1>
+                                        <div className="text-[12px] sm:text-[14px] font-orbitron tracking-[0.4em] sm:tracking-[0.5em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-2 px-6 inline-block bg-purple-900/10 shadow-[0_0_15px_rgba(188,19,254,0.3)] font-bold uppercase">Ciclos: 56</div>
+                                    </header>
 
-                            <main className="space-y-6 sm:space-y-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-white/10 pt-6">
-                                    <div className="p-4 bg-[#00f2ff]/5 border border-[#00f2ff]/20 rounded-sm">
-                                        <CalendarIcon className="w-5 h-5 text-[#00f2ff] mb-2"/>
-                                        <p className="text-xl sm:text-2xl font-black text-white font-orbitron">14.MARZO</p>
-                                        <p className="text-[10px] tracking-widest uppercase font-bold text-[#00f2ff]/70">17:00 Horas</p>
+                                    <main className="space-y-6 sm:space-y-8">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-white/10 pt-6">
+                                            <div className="p-4 bg-[#00f2ff]/5 border border-[#00f2ff]/20 rounded-sm">
+                                                <CalendarIcon className="w-5 h-5 text-[#00f2ff] mb-2"/>
+                                                <p className="text-xl sm:text-2xl font-black text-white font-orbitron">14.MARZO</p>
+                                                <p className="text-[10px] tracking-widest uppercase font-bold text-[#00f2ff]/70">17:00 Horas</p>
+                                            </div>
+                                            <div className="p-4 bg-[#bc13fe]/5 border border-[#bc13fe]/20 rounded-sm">
+                                                <MapPinIcon className="w-5 h-5 text-[#bc13fe] mb-2"/>
+                                                <p className="text-xl sm:text-2xl font-black text-white font-orbitron uppercase tracking-tighter leading-none mb-1">La Guadalupana</p>
+                                                <p className="text-[10px] tracking-widest uppercase font-bold text-white/40 italic">Acceso Privado</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-black/60 border border-[#00f2ff]/30 p-4 sm:p-5 space-y-4 shadow-[inset_0_0_20px_rgba(0,242,255,0.05)] rounded-sm">
+                                            <div className="flex items-center gap-2 text-[#00ff88] text-[9px] sm:text-[10px] font-bold tracking-widest leading-none"><TerminalIcon className="w-4 h-4"/>MANDALE AL FESTEJADO UN MENSAJE</div>
+                                            <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="Inyectar datos..." className="w-full bg-black/80 border border-[#00f2ff]/20 p-3 text-sm focus:border-[#00f2ff] outline-none text-white font-robot rounded-none"/>
+                                            <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-3 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88] transition-all">PROCESAR LOG</button>
+                                            {aiLogResponse && <div className="text-[11px] text-[#00ff88] italic p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 animate-pulse">{aiLogResponse}</div>}
+                                        </div>
+
+                                        <div className="bg-black/60 border border-[#bc13fe]/30 p-4 sm:p-5 space-y-4 toast-container rounded-sm">
+                                            <div className="flex items-center gap-2 text-[#bc13fe] text-[9px] sm:text-[10px] font-bold tracking-widest uppercase leading-none"><RocketIcon className="w-4 h-4"/>Generador de Brindis Neural</div>
+                                            <button onClick={handleToast} disabled={isProcessingAI} className="w-full py-3 border border-[#bc13fe]/50 text-[#bc13fe] font-orbitron font-black tracking-widest text-[10px] hover:bg-[#bc13fe] hover:text-white transition-all uppercase">Sincronizar Brindis</button>
+                                            {galacticToast && <div className="mt-4 text-[13px] sm:text-[14px] italic text-white/90 p-4 font-robot border-l-4 border-[#bc13fe] bg-purple-900/10 leading-relaxed shadow-lg">{galacticToast}</div>}
+                                        </div>
+
+                                        <button onClick={() => isConfirmed ? null : setShowConfirmModal(true)} disabled={isConfirmed} className={`w-full py-5 font-orbitron font-black text-[12px] sm:text-[13px] tracking-[0.6em] sm:tracking-[0.8em] transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 rounded-sm ${isConfirmed ? 'bg-gray-800 text-gray-500 border-gray-700 opacity-60' : 'bg-white text-black hover:bg-[#00f2ff]'}`}>
+                                            {isConfirmed ? 'ASISTENCIA REGISTRADA' : 'CONFIRMAR ASISTENCIA'}
+                                        </button>
+                                    </main>
+                                </div>
+                            ) : (
+                                <div className="animate-in fade-in slide-in-from-left-4 duration-500 h-full flex flex-col">
+                                    <header className="text-center mb-8">
+                                        <p className="text-[#00ff88] tracking-[0.6em] text-[10px] uppercase font-bold mb-2">Crew Registry</p>
+                                        <h2 className="text-3xl font-orbitron font-black text-white">TRIPULACIÓN CONFIRMADA</h2>
+                                        <div className="h-[1px] w-24 bg-[#00ff88] mx-auto mt-4"></div>
+                                    </header>
+                                    
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                                        {attendees.length === 0 ? (
+                                            <div className="text-center py-20 text-white/30 italic text-sm">Esperando señales de vida...</div>
+                                        ) : (
+                                            attendees.map((person, idx) => (
+                                                <div key={person.id} className="p-4 bg-white/5 border-l-2 border-[#00ff88] flex justify-between items-center group hover:bg-[#00ff88]/10 transition-all">
+                                                    <div>
+                                                        <div className="text-[10px] text-[#00ff88]/50 uppercase mb-1">Pass #{attendees.length - idx}</div>
+                                                        <div className="text-white font-orbitron font-bold tracking-widest">{person.name.toUpperCase()}</div>
+                                                    </div>
+                                                    <div className="text-[9px] text-white/20 font-robot">SYNC COMPLETE</div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
-                                    <div className="p-4 bg-[#bc13fe]/5 border border-[#bc13fe]/20 rounded-sm">
-                                        <MapPinIcon className="w-5 h-5 text-[#bc13fe] mb-2"/>
-                                        <p className="text-xl sm:text-2xl font-black text-white font-orbitron uppercase tracking-tighter leading-none mb-1">La Guadalupana</p>
-                                        <p className="text-[10px] tracking-widest uppercase font-bold text-white/40 italic">Acceso Privado</p>
+                                    <div className="mt-6 pt-4 border-t border-white/10 text-center">
+                                        <p className="text-[10px] text-[#00ff88] font-bold uppercase tracking-widest">Total Tripulantes: {attendees.length}</p>
                                     </div>
                                 </div>
+                            )}
 
-                                <div className="bg-black/60 border border-[#00f2ff]/30 p-4 sm:p-5 space-y-4 shadow-[inset_0_0_20px_rgba(0,242,255,0.05)] rounded-sm">
-                                    <div className="flex items-center gap-2 text-[#00ff88] text-[9px] sm:text-[10px] font-bold tracking-widest leading-none">
-                                        <TerminalIcon className="w-4 h-4"/>MANDALE AL FESTEJADO UN MENSAJE
-                                    </div>
-                                    <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="Inyectar datos..." className="w-full bg-black/80 border border-[#00f2ff]/20 p-3 text-sm focus:border-[#00f2ff] outline-none text-white font-robot rounded-none"/>
-                                    <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-3 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88] transition-all">PROCESAR LOG</button>
-                                    {aiLogResponse && <div className="text-[11px] text-[#00ff88] italic p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 animate-pulse">{aiLogResponse}</div>}
-                                </div>
-
-                                <div className="bg-black/60 border border-[#bc13fe]/30 p-4 sm:p-5 space-y-4 toast-container rounded-sm">
-                                    <div className="flex items-center gap-2 text-[#bc13fe] text-[9px] sm:text-[10px] font-bold tracking-widest uppercase leading-none">
-                                        <RocketIcon className="w-4 h-4"/>Generador de Brindis Neural
-                                    </div>
-                                    <button onClick={handleToast} disabled={isProcessingAI} className="w-full py-3 border border-[#bc13fe]/50 text-[#bc13fe] font-orbitron font-black tracking-widest text-[10px] hover:bg-[#bc13fe] hover:text-white transition-all uppercase">Sincronizar Brindis</button>
-                                    {galacticToast && <div className="mt-4 text-[13px] sm:text-[14px] italic text-white/90 p-4 font-robot border-l-4 border-[#bc13fe] bg-purple-900/10 leading-relaxed shadow-lg">{galacticToast}</div>}
-                                </div>
-
-                                <div className="space-y-4">
-                                    <button onClick={confirmAttendance} disabled={isConfirmed} className={`w-full py-5 font-orbitron font-black text-[12px] sm:text-[13px] tracking-[0.6em] sm:tracking-[0.8em] transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 rounded-sm ${isConfirmed ? 'bg-gray-800 text-gray-500 border-gray-700 opacity-60' : 'bg-white text-black hover:bg-[#00f2ff]'}`}>
-                                        {isConfirmed && <CheckIcon className="w-5 h-5 text-[#00ff88]"/>} {isConfirmed ? 'ASISTENCIA REGISTRADA' : 'CONFIRMAR ASISTENCIA'}
-                                    </button>
-                                    {isConfirmed && <div className="p-4 bg-[#00ff88]/5 border border-[#00ff88]/30 text-[#00ff88] font-robot text-xs italic animate-pulse text-center">Protocolo de confirmación finalizado. {confirmationMsg}</div>}
-                                </div>
-                            </main>
-                            <footer className="mt-10 pt-6 border-t border-white/10 text-center opacity-40 text-[9px] tracking-[1.2em] sm:tracking-[1.5em] uppercase text-[#00f2ff]">OSIANY 56 // NEURAL NET // 2025</footer>
+                            <footer className="mt-10 pt-6 border-t border-white/10 text-center opacity-40 text-[9px] tracking-[1.2em] sm:tracking-[1.5em] uppercase text-[#00f2ff]">OSIANY 56 // 2025</footer>
                         </div>
                     </div>
+
+                    {/* FUTURISTIC NAVIGATION BAR */}
+                    <nav className="fixed bottom-6 z-[100] flex gap-2 bg-black/80 backdrop-blur-xl p-2 border-2 border-white/10 rounded-full shadow-[0_0_30px_rgba(0,0,0,1)]">
+                        <button 
+                            onClick={() => setView('invite')}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all ${view === 'invite' ? 'bg-[#00f2ff] text-black font-black' : 'text-[#00f2ff] hover:bg-white/5'}`}
+                        >
+                            <HomeIcon className="w-4 h-4"/> <span className="text-[10px] font-orbitron uppercase tracking-widest">Invitación</span>
+                        </button>
+                        <button 
+                            onClick={() => setView('crew')}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all ${view === 'crew' ? 'bg-[#00ff88] text-black font-black shadow-[0_0_20px_rgba(0,255,136,0.3)]' : 'text-[#00ff88] hover:bg-white/5'}`}
+                        >
+                            <UsersIcon className="w-4 h-4"/> <span className="text-[10px] font-orbitron uppercase tracking-widest">Tripulación</span>
+                        </button>
+                    </nav>
+
+                    {/* CONFIRMATION MODAL */}
+                    {showConfirmModal && (
+                        <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
+                            <div className="bg-[#050810] border-2 border-[#00ff88] p-8 max-w-sm w-full shadow-[0_0_50px_rgba(0,255,136,0.2)]">
+                                <header className="text-center mb-6">
+                                    <div className="w-12 h-12 bg-[#00ff88]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <UsersIcon className="w-6 h-6 text-[#00ff88]"/>
+                                    </div>
+                                    <h3 className="font-orbitron font-black text-white text-xl uppercase italic">Identificación</h3>
+                                    <p className="text-[10px] text-white/50 mt-2 tracking-widest uppercase">Ingrese su nombre para el registro de misión</p>
+                                </header>
+                                <input 
+                                    type="text" 
+                                    value={confirmName} 
+                                    onChange={(e) => setConfirmName(e.target.value)} 
+                                    placeholder="Nombre completo..." 
+                                    className="w-full bg-black border border-[#00ff88]/30 p-4 text-white font-robot mb-6 outline-none focus:border-[#00ff88]"
+                                    autoFocus
+                                />
+                                <div className="flex flex-col gap-3">
+                                    <button 
+                                        onClick={handleFinalConfirmation}
+                                        className="w-full py-4 bg-[#00ff88] text-black font-orbitron font-black uppercase text-xs tracking-widest hover:brightness-110"
+                                    >
+                                        REGISTRAR INGRESO
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowConfirmModal(false)}
+                                        className="w-full py-2 text-white/30 text-[10px] font-orbitron uppercase tracking-widest hover:text-white"
+                                    >
+                                        Abortar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <audio ref={audioRef} style={{ display: 'none' }} />
                 </div>
             );
