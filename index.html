@@ -6,12 +6,10 @@
     <title>Osiany 56 - Neural Era Celebration</title>
     
     <!-- Metadatos para compartir (Open Graph) -->
-    <!-- Estos metadatos hacen que al pegar el link aparezca la imagen y el título -->
     <meta property="og:title" content="Osiany 56 - Neural Era Celebration">
     <meta property="og:description" content="Protocolo de acceso iniciado. Te esperamos en la estación espacial para celebrar 56 ciclos de trayectoria.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://osianycontreras.github.io/otros/">
-    <!-- Nota: Aquí deberías poner la URL de la imagen que generamos para que aparezca en el chat -->
     <meta property="og:image" content="https://raw.githubusercontent.com/osianycontreras/otros/main/llave_neural.png">
 
     <!-- Fuentes Futuristas -->
@@ -31,7 +29,7 @@
         }
         body { margin: 0; background: #010206; overflow-x: hidden; font-family: 'Share Tech Mono', monospace; }
         
-        /* Cosmic background drift */
+        /* Deriva cósmica constante */
         @keyframes cosmic-drift {
             0% { transform: translate(0, 0) scale(1); }
             50% { transform: translate(-20px, 15px) scale(1.05); }
@@ -84,6 +82,11 @@
             border: 1px dashed rgba(188, 19, 254, 0.6);
             box-shadow: inset 0 0 25px rgba(188, 19, 254, 0.2);
         }
+
+        /* Scrollbar estética */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #010206; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 2px; }
     </style>
 </head>
 <body>
@@ -125,7 +128,6 @@
 
             const invitationText = `Protocolo iniciado. Osiany, cincuenta y seis ciclos completados. Encuentro en sector Guadalupana, catorce de marzo, diecisiete horas. El sistema de inteligencia artificial está activado. Proceda con su mensaje.`;
 
-            // Core Gemini API Logic with retries
             const callGemini = async (prompt, systemInstruction = "") => {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 const payload = {
@@ -173,7 +175,6 @@
                 setIsConfirmed(true);
             };
 
-            // PCM to WAV helper for reliable audio playback
             const pcmToWav = (pcmData) => {
                 const buffer = new ArrayBuffer(44 + pcmData.length * 2);
                 const view = new DataView(buffer);
@@ -215,7 +216,7 @@
             };
 
             return (
-                <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden relative text-[#b0fbff]">
+                <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 overflow-hidden relative text-[#b0fbff]">
                     {/* Cosmos Engine */}
                     <div className="fixed inset-0 pointer-events-none" style={{ animation: 'cosmic-drift 30s ease-in-out infinite' }}>
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(188,19,254,0.1)_0%,transparent_80%)]"></div>
@@ -228,46 +229,60 @@
                     </div>
 
                     {/* AI Guide Control */}
-                    <button onClick={startTts} className={`fixed top-6 right-6 z-50 p-5 rounded-full border-2 transition-all shadow-[0_0_30px_rgba(0,242,255,0.4)] ${audioState === 'playing' ? 'bg-[#00f2ff] text-black scale-110 border-white' : 'bg-black/60 text-[#00f2ff] border-[#00f2ff]/40'}`}>
-                        {audioState === 'loading' ? <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"></div> : <BotIcon className="w-7 h-7" />}
+                    <button onClick={startTts} className={`fixed top-4 right-4 sm:top-6 sm:right-6 z-50 p-4 sm:p-5 rounded-full border-2 transition-all shadow-[0_0_30px_rgba(0,242,255,0.4)] ${audioState === 'playing' ? 'bg-[#00f2ff] text-black scale-110 border-white' : 'bg-black/60 text-[#00f2ff] border-[#00f2ff]/40'}`}>
+                        {audioState === 'loading' ? <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-t-transparent rounded-full animate-spin"></div> : <BotIcon className="w-6 h-6 sm:w-7 sm:h-7" />}
                     </button>
 
                     {/* Main UI Card */}
                     <div className="relative max-w-xl w-full z-10">
-                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-8 sm:p-12 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative rounded-sm">
+                        <div className="bg-[#050810]/95 backdrop-blur-3xl border-2 border-[#00f2ff]/20 p-6 sm:p-12 shadow-[0_0_80px_rgba(0,0,0,0.5)] relative rounded-sm">
                             <div className="absolute inset-0 pointer-events-none overflow-hidden"><div className="w-full h-[2px] bg-gradient-to-r from-transparent via-[#bc13fe] to-transparent absolute animate-[scan-y_8s_linear_infinite]"></div></div>
 
-                            <header className="text-center mb-10">
-                                <p className="text-[#00f2ff] tracking-[1em] text-[10px] uppercase font-bold mb-4">Celebration Sequence Initiated</p>
-                                <h1 className="text-6xl sm:text-8xl font-orbitron font-black tracking-tighter mb-4"><span className="gradient-text-ai">OSIANY</span></h1>
-                                <div className="text-[14px] font-orbitron tracking-[0.5em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-2 px-8 inline-block bg-purple-900/10 shadow-[0_0_15px_rgba(188,19,254,0.3)] font-bold uppercase">Ciclos: 56</div>
+                            <header className="text-center mb-8 sm:mb-10">
+                                <p className="text-[#00f2ff] tracking-[0.6em] sm:tracking-[1em] text-[9px] sm:text-[10px] uppercase font-bold mb-3">Celebration Sequence Initiated</p>
+                                <h1 className="text-5xl sm:text-8xl font-orbitron font-black tracking-tighter mb-4"><span className="gradient-text-ai">OSIANY</span></h1>
+                                <div className="text-[12px] sm:text-[14px] font-orbitron tracking-[0.4em] sm:tracking-[0.5em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-2 px-6 inline-block bg-purple-900/10 shadow-[0_0_15px_rgba(188,19,254,0.3)] font-bold uppercase">Ciclos: 56</div>
                             </header>
 
-                            <main className="space-y-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/10 pt-6">
-                                    <div className="p-4 bg-[#00f2ff]/5 border border-[#00f2ff]/20"><CalendarIcon className="w-6 h-6 text-[#00f2ff] mb-2"/><p className="text-2xl font-black text-white font-orbitron">14.MARZO</p><p className="text-[10px] tracking-widest uppercase font-bold">17:00 Horas</p></div>
-                                    <div className="p-4 bg-[#bc13fe]/5 border border-[#bc13fe]/20"><MapPinIcon className="w-6 h-6 text-[#bc13fe] mb-2"/><p className="text-2xl font-black text-white font-orbitron uppercase tracking-tighter">La Guadalupana</p><p className="text-[10px] tracking-widest uppercase font-bold text-white/50">Acceso Privado</p></div>
+                            <main className="space-y-6 sm:space-y-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-white/10 pt-6">
+                                    <div className="p-4 bg-[#00f2ff]/5 border border-[#00f2ff]/20 rounded-sm">
+                                        <CalendarIcon className="w-5 h-5 text-[#00f2ff] mb-2"/>
+                                        <p className="text-xl sm:text-2xl font-black text-white font-orbitron">14.MARZO</p>
+                                        <p className="text-[10px] tracking-widest uppercase font-bold text-[#00f2ff]/70">17:00 Horas</p>
+                                    </div>
+                                    <div className="p-4 bg-[#bc13fe]/5 border border-[#bc13fe]/20 rounded-sm">
+                                        <MapPinIcon className="w-5 h-5 text-[#bc13fe] mb-2"/>
+                                        <p className="text-xl sm:text-2xl font-black text-white font-orbitron uppercase tracking-tighter leading-none mb-1">La Guadalupana</p>
+                                        <p className="text-[10px] tracking-widest uppercase font-bold text-white/40 italic">Acceso Privado</p>
+                                    </div>
                                 </div>
 
-                                <div className="bg-black/60 border border-[#00f2ff]/30 p-5 space-y-4 shadow-[inset_0_0_20px_rgba(0,242,255,0.05)]">
-                                    <div className="flex items-center gap-2 text-[#00ff88] text-[10px] font-bold tracking-widest"><TerminalIcon className="w-4 h-4"/>MANDALE AL FESTEJADO UN MENSAJE</div>
-                                    <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="Inyectar datos..." className="w-full bg-black/80 border border-[#00f2ff]/20 p-3 text-sm focus:border-[#00f2ff] outline-none text-white font-robot"/>
-                                    <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-2 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88] transition-all">PROCESAR LOG</button>
+                                <div className="bg-black/60 border border-[#00f2ff]/30 p-4 sm:p-5 space-y-4 shadow-[inset_0_0_20px_rgba(0,242,255,0.05)] rounded-sm">
+                                    <div className="flex items-center gap-2 text-[#00ff88] text-[9px] sm:text-[10px] font-bold tracking-widest leading-none">
+                                        <TerminalIcon className="w-4 h-4"/>MANDALE AL FESTEJADO UN MENSAJE
+                                    </div>
+                                    <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="Inyectar datos..." className="w-full bg-black/80 border border-[#00f2ff]/20 p-3 text-sm focus:border-[#00f2ff] outline-none text-white font-robot rounded-none"/>
+                                    <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-3 bg-[#00f2ff] text-black font-orbitron font-black tracking-widest text-[10px] hover:bg-[#00ff88] transition-all">PROCESAR LOG</button>
                                     {aiLogResponse && <div className="text-[11px] text-[#00ff88] italic p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 animate-pulse">{aiLogResponse}</div>}
                                 </div>
 
-                                <div className="bg-black/60 border border-[#bc13fe]/30 p-5 space-y-4 toast-container">
-                                    <div className="flex items-center gap-2 text-[#bc13fe] text-[10px] font-bold tracking-widest uppercase"><RocketIcon className="w-4 h-4"/>Generador de Brindis Neural</div>
-                                    <button onClick={handleToast} disabled={isProcessingAI} className="w-full py-2 border border-[#bc13fe]/50 text-[#bc13fe] font-orbitron font-black tracking-widest text-[10px] hover:bg-[#bc13fe] hover:text-white transition-all uppercase">Sincronizar Brindis</button>
-                                    {galacticToast && <div className="mt-4 text-[14px] italic text-white/90 p-4 font-robot border-l-4 border-[#bc13fe] bg-purple-900/10 leading-relaxed shadow-lg">{galacticToast}</div>}
+                                <div className="bg-black/60 border border-[#bc13fe]/30 p-4 sm:p-5 space-y-4 toast-container rounded-sm">
+                                    <div className="flex items-center gap-2 text-[#bc13fe] text-[9px] sm:text-[10px] font-bold tracking-widest uppercase leading-none">
+                                        <RocketIcon className="w-4 h-4"/>Generador de Brindis Neural
+                                    </div>
+                                    <button onClick={handleToast} disabled={isProcessingAI} className="w-full py-3 border border-[#bc13fe]/50 text-[#bc13fe] font-orbitron font-black tracking-widest text-[10px] hover:bg-[#bc13fe] hover:text-white transition-all uppercase">Sincronizar Brindis</button>
+                                    {galacticToast && <div className="mt-4 text-[13px] sm:text-[14px] italic text-white/90 p-4 font-robot border-l-4 border-[#bc13fe] bg-purple-900/10 leading-relaxed shadow-lg">{galacticToast}</div>}
                                 </div>
 
-                                <button onClick={confirmAttendance} disabled={isConfirmed} className={`w-full py-5 font-orbitron font-black text-[13px] tracking-[0.8em] transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 ${isConfirmed ? 'bg-gray-800 text-gray-500 border-gray-700 opacity-60' : 'bg-white text-black hover:bg-[#00f2ff]'}`}>
-                                    {isConfirmed && <CheckIcon className="w-5 h-5 text-[#00ff88]"/>} {isConfirmed ? 'ASISTENCIA REGISTRADA' : 'CONFIRMAR ASISTENCIA'}
-                                </button>
-                                {isConfirmed && <div className="p-4 bg-[#00ff88]/5 border border-[#00ff88]/30 text-[#00ff88] font-robot text-xs italic animate-pulse text-center">Protocolo de confirmación finalizado. {confirmationMsg}</div>}
+                                <div className="space-y-4">
+                                    <button onClick={confirmAttendance} disabled={isConfirmed} className={`w-full py-5 font-orbitron font-black text-[12px] sm:text-[13px] tracking-[0.6em] sm:tracking-[0.8em] transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 rounded-sm ${isConfirmed ? 'bg-gray-800 text-gray-500 border-gray-700 opacity-60' : 'bg-white text-black hover:bg-[#00f2ff]'}`}>
+                                        {isConfirmed && <CheckIcon className="w-5 h-5 text-[#00ff88]"/>} {isConfirmed ? 'ASISTENCIA REGISTRADA' : 'CONFIRMAR ASISTENCIA'}
+                                    </button>
+                                    {isConfirmed && <div className="p-4 bg-[#00ff88]/5 border border-[#00ff88]/30 text-[#00ff88] font-robot text-xs italic animate-pulse text-center">Protocolo de confirmación finalizado. {confirmationMsg}</div>}
+                                </div>
                             </main>
-                            <footer className="mt-10 pt-6 border-t border-white/10 text-center opacity-40 text-[9px] tracking-[1.5em] uppercase text-[#00f2ff]">OSIANY 56 // NEURAL NET // 2025</footer>
+                            <footer className="mt-10 pt-6 border-t border-white/10 text-center opacity-40 text-[9px] tracking-[1.2em] sm:tracking-[1.5em] uppercase text-[#00f2ff]">OSIANY 56 // NEURAL NET // 2025</footer>
                         </div>
                     </div>
                     <audio ref={audioRef} style={{ display: 'none' }} />
