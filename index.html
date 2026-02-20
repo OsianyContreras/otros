@@ -32,7 +32,7 @@
             overflow-x: hidden; 
             font-family: 'Orbitron', sans-serif; 
             color: #b0fbff; 
-            font-size: 16px; /* Base estándar para mejor control responsivo */
+            font-size: 16px; 
         }
         
         .font-mono-robot { font-family: 'Share Tech Mono', monospace; }
@@ -102,9 +102,7 @@
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
         }
-        .btn-robotic:active {
-            transform: scale(0.95);
-        }
+        .btn-robotic:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -113,10 +111,10 @@
     <!-- Firebase SDK Modular -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        window.FirebaseCore = { initializeApp, getFirestore, collection, addDoc, onSnapshot, getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken };
+        window.FirebaseCore = { initializeApp, getFirestore, collection, addDoc, onSnapshot, getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, serverTimestamp };
     </script>
 
     <script type="text/babel">
@@ -160,13 +158,14 @@
                         const auth = getAuth(app);
                         const firestore = getFirestore(app);
                         setDb(firestore);
+
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await signInWithCustomToken(auth, __initial_auth_token);
                         } else {
                             await signInAnonymously(auth);
                         }
                         onAuthStateChanged(auth, setUser);
-                    } catch (e) { console.error("Sync Error"); }
+                    } catch (e) { console.error("Error de inicialización"); }
                 };
                 init();
             }, []);
@@ -178,7 +177,7 @@
                 const unsubscribe = onSnapshot(colRef, (snapshot) => {
                     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setAttendees(data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
-                }, (error) => console.log("Connection limited"));
+                }, (error) => console.log("Limitación de conexión."));
                 return () => unsubscribe();
             }, [db, user]);
 
@@ -188,25 +187,20 @@
                     contents: [{ parts: [{ text: prompt }] }],
                     systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
                 };
-                let retries = 0;
-                while (retries < 3) {
-                    try {
-                        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (res.ok) {
-                            const data = await res.json();
-                            return data.candidates?.[0]?.content?.parts?.[0]?.text;
-                        }
-                    } catch (e) {}
-                    retries++;
-                    await new Promise(r => setTimeout(r, 1000));
-                }
+                try {
+                    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (res.ok) {
+                        const data = await res.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    }
+                } catch (e) {}
                 return null;
             };
 
             const processLog = async () => {
                 if (!guestMessage.trim()) return;
                 setIsProcessingAI(true);
-                const res = await callGemini(`Un invitado envió: "${guestMessage}". Responde como una IA espacial futurista asignando un rango galáctico. Máximo 12 palabras.`, "IA Estación Osiany.");
+                const res = await callGemini(`Un invitado envió: "${guestMessage}". Responde como una IA espacial futurista asignando un rango galáctico divertido. Máximo 12 palabras.`, "IA Estación Osiany.");
                 setAiLogResponse(res);
                 setIsProcessingAI(false);
             };
@@ -219,19 +213,30 @@
             };
 
             const handleFinalConfirmation = async () => {
-                if (!confirmName.trim() || !user) return;
+                if (!confirmName.trim()) return;
                 setIsSaving(true);
+                
                 try {
-                    const { collection, addDoc } = window.FirebaseCore;
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
-                    await addDoc(colRef, { name: confirmName, timestamp: Date.now() });
-                    setIsConfirmed(true);
-                    setShowConfirmModal(false);
+                    // Intentamos guardar en la nube si hay usuario y DB listos
+                    if (db && window.FirebaseCore) {
+                        const { collection, addDoc, serverTimestamp } = window.FirebaseCore;
+                        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'confirmations');
+                        await addDoc(colRef, { 
+                            name: confirmName, 
+                            timestamp: serverTimestamp() || Date.now() 
+                        });
+                    } else {
+                        // Respaldo local inmediato si Firebase no está listo
+                        throw new Error("No database ready");
+                    }
                 } catch (e) {
-                    setAttendees(prev => [{ id: Date.now(), name: confirmName }, ...prev]);
+                    console.log("Registro de respaldo local activado.");
+                    setAttendees(prev => [{ id: Date.now(), name: confirmName, timestamp: Date.now() }, ...prev]);
+                } finally {
                     setIsConfirmed(true);
                     setShowConfirmModal(false);
-                } finally { setIsSaving(false); }
+                    setIsSaving(false);
+                }
             };
 
             const pcmToWav = (pcmData) => {
@@ -255,7 +260,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `Diga con voz cibernética: Transmisión recibida. Bienvenido al sector 56. Registre su asistencia.` }] }],
+                            contents: [{ parts: [{ text: `Diga con voz cibernética: Transmisión recibida. Bienvenido al sector 56. Registre su asistencia en el panel principal.` }] }],
                             generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }
                         })
                     });
@@ -299,31 +304,30 @@
                                 <div className="animate-in fade-in slide-in-from-right-8 duration-700">
                                     <header className="text-center mb-6">
                                         <p className="text-[#00f2ff] text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] mb-2">Celebration Sequence Initiated</p>
-                                        <h1 className="text-5xl sm:text-8xl font-black tracking-tighter mb-4 leading-none whitespace-nowrap"><span className="gradient-text-ai">OSIANY</span></h1>
-                                        <div className="text-lg sm:text-2xl tracking-[0.2em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-1 px-6 inline-block bg-purple-900/10 font-black">CICLOS: 56</div>
+                                        <h1 className="text-4xl sm:text-8xl font-black tracking-tighter mb-4 leading-none"><span className="gradient-text-ai">OSIANY</span></h1>
+                                        <div className="text-lg sm:text-2xl tracking-[0.2em] text-[#bc13fe] border-2 border-[#bc13fe]/40 py-1 px-6 inline-block bg-purple-900/10 font-black uppercase">Ciclos: 56</div>
                                     </header>
 
                                     <main className="space-y-6">
-                                        {/* DATA BARS - AJUSTADOS PARA NO DESBORDAR */}
                                         <div className="space-y-3 border-t-2 border-white/10 pt-6">
                                             <div className="flex flex-nowrap items-center justify-between p-3 bg-[#00f2ff]/5 border border-[#00f2ff]/30 rounded-sm">
-                                                <div className="flex items-center gap-2 shrink-0">
+                                                <div className="flex items-center gap-2">
                                                     <CalendarIcon className="w-5 h-5 text-[#00f2ff]" />
-                                                    <span className="text-base sm:text-2xl font-black uppercase whitespace-nowrap">14 MARZO</span>
+                                                    <span className="text-sm sm:text-2xl font-black uppercase whitespace-nowrap">14 MARZO</span>
                                                 </div>
-                                                <div className="flex items-center gap-2 shrink-0">
+                                                <div className="flex items-center gap-2">
                                                     <div className="h-6 w-[1px] bg-white/20"></div>
-                                                    <span className="text-sm sm:text-xl font-black text-[#00f2ff]/80">17:00 HRS</span>
+                                                    <span className="text-xs sm:text-xl font-black text-[#00f2ff]/80">17:00 HRS</span>
                                                 </div>
                                             </div>
                                             <div className="flex flex-nowrap items-center justify-between p-3 bg-[#bc13fe]/5 border border-[#bc13fe]/30 rounded-sm overflow-hidden">
                                                 <div className="flex items-center gap-2 overflow-hidden">
-                                                    <MapPinIcon className="w-5 h-5 text-[#bc13fe] shrink-0" />
-                                                    <span className="text-base sm:text-2xl font-black uppercase whitespace-nowrap overflow-hidden text-ellipsis">GUADALUPANA</span>
+                                                    <MapPinIcon className="w-5 h-5 text-[#bc13fe]" />
+                                                    <span className="text-sm sm:text-2xl font-black uppercase whitespace-nowrap overflow-hidden text-ellipsis">GUADALUPANA</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     <div className="h-6 w-[1px] bg-white/20"></div>
-                                                    <span className="text-xs sm:text-lg font-black text-[#bc13fe]/80 italic">PRIVADO</span>
+                                                    <span className="text-[10px] sm:text-lg font-black text-[#bc13fe]/80 italic">PRIVADO</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -333,7 +337,7 @@
                                                 <BotIcon className="w-6 h-6"/>
                                                 <span className="text-[10px] sm:text-sm font-black uppercase tracking-widest">MANDALE UN MENSAJE</span>
                                             </div>
-                                            <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="DATOS..." className="w-full bg-black/80 border-2 border-[#00f2ff]/20 p-4 text-lg focus:border-[#00f2ff] outline-none text-white font-mono-robot uppercase"/>
+                                            <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="INYECCIÓN DE DATOS..." className="w-full bg-black/80 border-2 border-[#00f2ff]/20 p-4 text-lg focus:border-[#00f2ff] outline-none text-white font-mono-robot uppercase"/>
                                             <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-4 bg-[#00f2ff] text-black text-lg font-black tracking-widest hover:bg-[#00ff88] transition-all">PROCESAR LOG</button>
                                             {aiLogResponse && <div className="text-base text-[#00ff88] italic p-4 border-l-4 border-[#00ff88] bg-[#00ff88]/5 animate-pulse font-mono-robot">{aiLogResponse}</div>}
                                         </div>
@@ -380,7 +384,7 @@
                         </div>
                     </div>
 
-                    {/* NAVEGACIÓN - AJUSTADA PARA MÓVILES */}
+                    {/* NAVEGACIÓN */}
                     <nav className="fixed bottom-6 z-[100] flex gap-3 bg-black/90 backdrop-blur-2xl p-3 border-2 border-white/10 rounded-full shadow-[0_0_40px_rgba(0,0,0,1)]">
                         <button onClick={() => setView('invite')} className={`flex items-center gap-3 px-6 py-4 rounded-full transition-all ${view === 'invite' ? 'bg-[#00f2ff] text-black font-black scale-105' : 'text-[#00f2ff] hover:bg-white/5'}`}>
                             <HomeIcon className="w-6 h-6"/><span className="text-[10px] font-black uppercase hidden sm:inline">INICIO</span>
