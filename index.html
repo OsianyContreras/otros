@@ -111,20 +111,20 @@
 
         @keyframes ship-fly {
             0% {
-                transform: translate(-50vw, 50vh) scale(0.6);
+                transform: translate(-100vw, 50vh) scale(0.6);
                 opacity: 0;
             }
 
-            20% {
+            10% {
                 opacity: 1;
             }
 
-            80% {
+            90% {
                 opacity: 1;
             }
 
             100% {
-                transform: translate(100vw, -100vh) scale(1.5);
+                transform: translate(150vw, -100vh) scale(1.5);
                 opacity: 0;
             }
         }
@@ -133,34 +133,61 @@
             position: fixed;
             z-index: 9999;
             pointer-events: none;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: ship-fly 10s ease-in-out forwards;
         }
 
         .ship-model {
-            width: 400px;
+            width: 80vw;
+            max-width: 400px;
+            height: auto;
             position: relative;
             z-index: 10;
-            filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)) drop-shadow(0 0 40px rgba(0, 242, 255, 0.4));
+            filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.8));
+            -webkit-filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.8));
+            will-change: transform, opacity;
+        }
+
+        @media (min-width: 768px) {
+            .ship-model {
+                width: 400px;
+                filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)) drop-shadow(0 0 40px rgba(0, 242, 255, 0.4));
+            }
         }
 
         .ship-banner {
             position: absolute;
             z-index: 5;
-            top: 70%;
-            left: -80%;
+            top: 80%;
+            left: -50%;
             background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.3), rgba(0, 242, 255, 0.3), transparent);
             border-top: 2px solid rgba(0, 242, 255, 0.6);
             border-bottom: 2px solid rgba(0, 242, 255, 0.6);
             color: #fff;
-            padding: 8px 40px;
+            padding: 4px 20px;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
-            font-size: 24px;
-            letter-spacing: 6px;
+            font-size: 14px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             white-space: nowrap;
-            text-shadow: 0 0 15px #00f2ff;
+            text-shadow: 0 0 10px #00f2ff;
             animation: banner-wave 2s ease-in-out infinite;
+        }
+
+        @media (min-width: 768px) {
+            .ship-banner {
+                padding: 8px 40px;
+                font-size: 24px;
+                letter-spacing: 6px;
+                left: -80%;
+            }
         }
 
         /* Connecting Tether */
@@ -514,11 +541,9 @@
                         </div>
                     )}
                     {showShip && (
-                        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center">
-                            <div className="indigenous-ship-wrapper">
-                                <img src="nave.png" className="ship-model" alt="Capital Ship" />
-                                <div className="ship-banner">! NO FALTES !</div>
-                            </div>
+                        <div className="indigenous-ship-wrapper">
+                            <img src="nave.png" className="ship-model" alt="Capital Ship" />
+                            <div className="ship-banner">! NO FALTES !</div>
                         </div>
                     )}
                 </div>
