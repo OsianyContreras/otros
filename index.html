@@ -109,6 +109,85 @@
             }
         }
 
+        @keyframes ship-fly {
+            0% {
+                transform: translate(-50vw, 50vh) scale(0.6);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(100vw, -100vh) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .indigenous-ship-wrapper {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            animation: ship-fly 10s ease-in-out forwards;
+        }
+
+        .ship-model {
+            width: 400px;
+            position: relative;
+            z-index: 10;
+            filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.8)) drop-shadow(0 0 40px rgba(0, 242, 255, 0.4));
+        }
+
+        .ship-banner {
+            position: absolute;
+            z-index: 5;
+            top: 70%;
+            left: -80%;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.3), rgba(0, 242, 255, 0.3), transparent);
+            border-top: 2px solid rgba(0, 242, 255, 0.6);
+            border-bottom: 2px solid rgba(0, 242, 255, 0.6);
+            color: #fff;
+            padding: 8px 40px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 24px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            text-shadow: 0 0 15px #00f2ff;
+            animation: banner-wave 2s ease-in-out infinite;
+        }
+
+        /* Connecting Tether */
+        .ship-banner::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: 10%;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.4));
+            transform: rotate(-30deg);
+            transform-origin: right top;
+        }
+
+        @keyframes banner-wave {
+
+            0%,
+            100% {
+                transform: skewX(-15deg) scaleX(0.95);
+            }
+
+            50% {
+                transform: skewX(15deg) scaleX(1.05);
+            }
+        }
+
         @keyframes scan-y {
             0% {
                 top: -10%;
@@ -227,6 +306,7 @@
             const [attendees, setAttendees] = useState([]);
             const [user, setUser] = useState(null);
             const [db, setDb] = useState(null);
+            const [showShip, setShowShip] = useState(false);
 
             const audioRef = useRef(null);
             const apiKey = "AIzaSyCkiybXDO82qM_dpR1VAnXdBEMtgXbgwWk"; // User provided this
@@ -335,6 +415,8 @@
                 } catch (e) {
                     console.error("Error saving guest:", e);
                 } finally {
+                    setShowShip(true);
+                    setTimeout(() => setShowShip(false), 10000);
                     setIsConfirmed(true);
                     setShowConfirmModal(false);
                     setIsSaving(false);
@@ -428,6 +510,14 @@
                                 <input type="text" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder="NOMBRE DEL TRIPULANTE" className="w-full bg-black border border-[#00ff88]/30 p-4 font-mono-robot text-white mb-6 outline-none focus:border-[#00ff88] uppercase" />
                                 <button onClick={handleFinalConfirmation} disabled={isSaving || !confirmName.trim()} className="w-full py-4 bg-[#00ff88] text-black font-black uppercase tracking-widest hover:brightness-110 mb-4">{isSaving ? 'SYNC...' : 'REGISTRAR'}</button>
                                 <button onClick={() => setShowConfirmModal(false)} className="w-full text-white/40 text-xs font-black uppercase hover:text-white transition-all">CANCELAR</button>
+                            </div>
+                        </div>
+                    )}
+                    {showShip && (
+                        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center">
+                            <div className="indigenous-ship-wrapper">
+                                <img src="nave.png" className="ship-model" alt="Capital Ship" />
+                                <div className="ship-banner">! NO FALTES !</div>
                             </div>
                         </div>
                     )}
