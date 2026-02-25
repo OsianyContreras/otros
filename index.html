@@ -140,7 +140,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: ship-fly 10s ease-in-out forwards;
+            animation: ship-fly 18s ease-in-out forwards;
         }
 
         .ship-model {
@@ -164,42 +164,57 @@
         .ship-banner {
             position: absolute;
             z-index: 5;
-            top: 80%;
-            left: -50%;
-            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.3), rgba(0, 242, 255, 0.3), transparent);
-            border-top: 2px solid rgba(0, 242, 255, 0.6);
-            border-bottom: 2px solid rgba(0, 242, 255, 0.6);
-            color: #fff;
-            padding: 4px 20px;
+            top: 65%;
+            /* Even closer vertically */
+            left: 5%;
+            /* Tucked closer to the ship's tail center */
+            color: #ffffff;
+            /* White text for maximum contrast */
+            padding: 8px 25px;
+            /* More padding for a solid box look */
+            background: rgba(0, 0, 0, 0.85);
+            /* Solid dark background to block out stars */
+            border: 2px solid #ff0000;
+            /* Sharp red border */
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            /* Outer glow for the box */
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
-            font-size: 14px;
-            letter-spacing: 2px;
+            font-size: 18px;
+            /* Larger font */
+            letter-spacing: 1px;
             text-transform: uppercase;
             white-space: nowrap;
-            text-shadow: 0 0 10px #00f2ff;
-            animation: banner-wave 2s ease-in-out infinite;
+            text-shadow: 0 0 8px #ff0000;
+            /* Subtle red glow on white letters */
+            animation: banner-wave 2s ease-in-out infinite, electrical-flicker 0.15s infinite;
+            transform: rotate(-15deg);
+            border-radius: 4px;
+            /* Slightly rounded for a tech look */
         }
 
         @media (min-width: 768px) {
             .ship-banner {
-                padding: 8px 40px;
-                font-size: 24px;
-                letter-spacing: 6px;
-                left: -80%;
+                padding: 12px 40px;
+                font-size: 28px;
+                left: 0%;
+                /* Centered slightly behind the ship on desktop */
+                top: 70%;
             }
         }
 
-        /* Connecting Tether */
+        /* Connecting Tether - Ultra Short */
         .ship-banner::before {
             content: '';
             position: absolute;
-            top: -20px;
-            right: 10%;
-            width: 100px;
+            top: -10px;
+            right: 20%;
+            width: 30px;
+            /* Very short tether */
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.4));
-            transform: rotate(-30deg);
+            background: rgba(255, 31, 31, 0.8);
+            box-shadow: 0 0 8px #ff0000;
+            transform: rotate(-60deg);
             transform-origin: right top;
         }
 
@@ -212,6 +227,25 @@
 
             50% {
                 transform: skewX(15deg) scaleX(1.05);
+            }
+        }
+
+        @keyframes electrical-flicker {
+
+            0%,
+            100% {
+                border-color: #ff0000;
+                box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            }
+
+            50% {
+                border-color: #ff8888;
+                box-shadow: 0 0 30px rgba(255, 100, 100, 0.9), 0 0 10px #fff;
+            }
+
+            70% {
+                border-color: #ff0000;
+                box-shadow: 0 0 5px rgba(255, 0, 0, 0.2);
             }
         }
 
@@ -286,18 +320,79 @@
             text-shadow: 0 0 10px var(--neon-purple);
         }
 
-        /* Responsive */
-        .text-responsive-title {
-            font-size: clamp(2.8rem, 12vw, 5rem);
+        @keyframes title-float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
-        .text-responsive-data {
-            font-size: clamp(1rem, 4vw, 1.5rem);
+        .title-premium {
+            font-size: clamp(3.5rem, 15vw, 6.5rem) !important;
+            white-space: nowrap;
+            color: #fff;
+            -webkit-text-stroke: 2px black;
+            /* Bold contour for the title */
+            text-shadow:
+                0 0 20px var(--neon-cyan),
+                0 0 40px var(--neon-cyan),
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                2px 2px 0 #000;
+            animation: title-float 4s ease-in-out infinite, glitch-anim 0.3s infinite;
+        }
+
+        /* Particle Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 8px;
+            min-width: 70px;
+            border-radius: 4px;
+        }
+
+        .share-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-mini {
+            font-size: 10px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
     </style>
 </head>
 
 <body>
+    <canvas id="particle-canvas"></canvas>
     <div class="neural-bg"></div>
     <div id="root"></div>
 
@@ -318,6 +413,42 @@
         const RocketIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" /><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" /></svg>);
         const UsersIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>);
         const HomeIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>);
+        const ShareIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>);
+
+        const CountdownTimer = ({ targetDate }) => {
+            const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = new Date(targetDate).getTime() - now;
+
+                    if (distance < 0) {
+                        clearInterval(interval);
+                        return;
+                    }
+
+                    setTimeLeft({
+                        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+                    });
+                }, 1000);
+                return () => clearInterval(interval);
+            }, [targetDate]);
+
+            return (
+                <div className="flex gap-2 justify-center mt-6">
+                    {Object.entries(timeLeft).map(([unit, value]) => (
+                        <div key={unit} className="countdown-item shadow-lg">
+                            <span className="text-2xl font-black text-[#00f2ff]">{value.toString().padStart(2, '0')}</span>
+                            <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest">{unit}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
 
         const App = () => {
             const [view, setView] = useState('invite');
@@ -326,6 +457,7 @@
             const [aiLogResponse, setAiLogResponse] = useState(null);
             const [isProcessingAI, setIsProcessingAI] = useState(false);
             const [isSaving, setIsSaving] = useState(false);
+            const [lastRegisteredName, setLastRegisteredName] = useState('');
             const [galacticToast, setGalacticToast] = useState('');
             const [isConfirmed, setIsConfirmed] = useState(false);
             const [confirmName, setConfirmName] = useState('');
@@ -360,7 +492,67 @@
                     } catch (e) { console.warn("Firebase offline mode."); }
                 };
                 init();
+
+                // Particle Engine
+                const canvas = document.getElementById('particle-canvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    let particles = [];
+                    const particleCount = 50;
+
+                    const initParticles = () => {
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                        particles = [];
+                        for (let i = 0; i < particleCount; i++) {
+                            particles.push({
+                                x: Math.random() * canvas.width,
+                                y: Math.random() * canvas.height,
+                                size: Math.random() * 2,
+                                speedX: (Math.random() - 0.5) * 0.5,
+                                speedY: (Math.random() - 0.5) * 0.5,
+                            });
+                        }
+                    };
+
+                    const drawParticles = () => {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
+                        particles.forEach(p => {
+                            p.x += p.speedX;
+                            p.y += p.speedY;
+                            if (p.x < 0) p.x = canvas.width;
+                            if (p.x > canvas.width) p.x = 0;
+                            if (p.y < 0) p.y = canvas.height;
+                            if (p.y > canvas.height) p.y = 0;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                        requestAnimationFrame(drawParticles);
+                    };
+
+                    window.addEventListener('resize', initParticles);
+                    initParticles();
+                    drawParticles();
+                }
             }, []);
+
+            const playBeep = (freq = 440, type = 'sine', duration = 0.1) => {
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = context.createOscillator();
+                    const gain = context.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, context.currentTime);
+                    gain.gain.setValueAtTime(0.1, context.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(context.destination);
+                    osc.start();
+                    osc.stop(context.currentTime + duration);
+                } catch (e) { }
+            };
 
             useEffect(() => {
                 if (!db || !user) return;
@@ -434,6 +626,7 @@
                 const newGuest = { name: confirmName, timestamp: Date.now() };
 
                 try {
+                    setLastRegisteredName(confirmName);
                     // Guardar en LocalStorage (Siempre)
                     const localData = JSON.parse(localStorage.getItem(`${appId}_guests`) || '[]');
                     if (!localData.find(g => g.name === confirmName)) {
@@ -452,8 +645,9 @@
                     console.error("Error saving guest:", e);
                 } finally {
                     setShowShip(true);
-                    setTimeout(() => setShowShip(false), 10000);
+                    setTimeout(() => setShowShip(false), 18000);
                     setIsConfirmed(true);
+                    setConfirmName(''); // Clear for next guest
                     setShowConfirmModal(false);
                     setIsSaving(false);
                 }
@@ -472,8 +666,10 @@
                                 <div className="space-y-10">
                                     <header className="text-center">
                                         <p className="font-mono-robot text-[#00f2ff] text-xs tracking-[0.4em] mb-4 uppercase">Neural Access Granted</p>
-                                        <h1 className="text-responsive-title font-black tracking-tighter leading-none mb-2 glitch" data-text="OSIANY">OSIANY</h1>
+                                        <h1 className="text-responsive-title font-black tracking-tighter leading-none mb-2 glitch title-premium" data-text="OSIANY">OSIANY</h1>
                                         <div className="inline-block px-4 py-1 border border-[#bc13fe] text-[#bc13fe] text-xl font-black bg-[#bc13fe]/10">PHASE: 56</div>
+
+                                        <CountdownTimer targetDate="March 14, 2026 17:00:00" />
                                     </header>
 
                                     <div className="space-y-4">
@@ -499,16 +695,25 @@
                                     {/* AI Message Interaction */}
                                     <div className="bg-black/60 border border-[#00f2ff]/20 p-6 rounded-md space-y-4">
                                         <div className="flex items-center gap-2 text-[#00ff88] text-xs font-black uppercase">
-                                            <BotIcon className="w-4 h-4" /> Transmitir al Host
+                                            <BotIcon className="w-4 h-4" /> Transmitir un mensaje
                                         </div>
-                                        <input type="text" value={guestMessage} onChange={(e) => setGuestMessage(e.target.value)} placeholder="MENSAJE..." className="w-full bg-black/40 border border-white/10 p-3 font-mono-robot text-white focus:border-[#00f2ff] outline-none transition-all uppercase" />
-                                        <button onClick={processLog} disabled={isProcessingAI || !guestMessage} className="w-full py-2 bg-[#00f2ff] text-black font-black text-sm tracking-widest hover:brightness-110 transition-all">PROCESAR</button>
+                                        <input type="text" value={guestMessage} onChange={(e) => {
+                                            setGuestMessage(e.target.value);
+                                            if (e.target.value.length % 5 === 0) playBeep(200, 'square', 0.05);
+                                        }} placeholder="MENSAJE..." className="w-full bg-black/40 border border-white/10 p-3 font-mono-robot text-white focus:border-[#00f2ff] outline-none transition-all uppercase" />
+                                        <button
+                                            onClick={() => { playBeep(880); processLog(); }}
+                                            disabled={isProcessingAI || !guestMessage}
+                                            className={`w-full py-4 font-black text-sm tracking-widest transition-all ${isProcessingAI && !galacticToast.includes('...') ? 'bg-[#00ff88] text-black animate-pulse' : 'bg-[#00f2ff] text-black hover:brightness-110'}`}
+                                        >
+                                            {isProcessingAI && !galacticToast.includes('...') ? 'PROCESANDO MENSAJE...' : 'PROCESAR'}
+                                        </button>
                                         {aiLogResponse && <div className="p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 text-sm italic font-mono-robot text-[#00ff88] animate-pulse">{aiLogResponse}</div>}
                                     </div>
 
                                     {/* Brindis AI */}
                                     <div className="text-center space-y-4">
-                                        <button onClick={handleToast} disabled={isProcessingAI} className="btn-secondary px-8 py-3 rounded-full text-xs font-black tracking-widest uppercase disabled:opacity-50">
+                                        <button onClick={() => { playBeep(600, 'sine', 0.2); handleToast(); }} disabled={isProcessingAI} className="btn-secondary w-full py-4 rounded-md text-sm font-black tracking-widest uppercase disabled:opacity-50">
                                             {isProcessingAI && galacticToast.includes('...') ? 'SINCRONIZANDO...' : 'Sincronizar Brindis'}
                                         </button>
                                         {galacticToast && (
@@ -518,8 +723,31 @@
                                         )}
                                     </div>
 
-                                    <button onClick={() => isConfirmed ? null : setShowConfirmModal(true)} disabled={isConfirmed} className={`w-full py-5 rounded-md text-xl btn-neural tracking-widest ${isConfirmed ? 'opacity-50 grayscale' : ''}`}>
-                                        {isConfirmed ? 'REGISTRO OK' : 'CONFIRMAR ACCESO'}
+                                    {/* Share / Calendar Actions */}
+                                    <div className="share-row">
+                                        <button onClick={() => {
+                                            playBeep(440, 'triangle');
+                                            const text = "Acompáñame a celebrar Osiany 56 - Neural Era Celebration. 🚀";
+                                            const url = window.location.href;
+                                            if (navigator.share) {
+                                                navigator.share({ title: 'Osiany 56', text, url });
+                                            } else {
+                                                window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`);
+                                            }
+                                        }} className="btn-secondary btn-mini">
+                                            <ShareIcon className="w-3 h-3" /> Compartir
+                                        </button>
+                                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Osiany+56+-+Neural+Era+Celebration&dates=20260314T170000/20260314T230000&details=Protocolo+de+acceso+iniciado.+Registro+de+tripulación+activo.&location=Fracc.+La+Guadalupana" target="_blank" onClick={() => playBeep(440, 'triangle')} className="btn-secondary btn-mini">
+                                            <CalendarIcon className="w-3 h-3" /> Agendar
+                                        </a>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setShowConfirmModal(true)}
+                                        disabled={showShip}
+                                        className={`w-full py-5 rounded-md text-xl btn-neural tracking-widest transition-all ${showShip ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                                    >
+                                        {isConfirmed ? (showShip ? 'NAVE EN TRAYECTO...' : 'AÑADIR OTRO TRIPULANTE') : 'CONFIRMAR ACCESO'}
                                     </button>
                                 </div>
                             ) : (
@@ -548,7 +776,9 @@
                     {showConfirmModal && (
                         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in">
                             <div className="bg-[#0a0f1a] border-2 border-[#00ff88] p-8 max-w-sm w-full rounded-sm shadow-[0_0_50px_rgba(0,255,136,0.3)]">
-                                <h3 className="text-2xl font-black text-white italic mb-6 uppercase text-center">Verificación</h3>
+                                <h3 className="text-2xl font-black text-white italic mb-2 uppercase text-center">{isConfirmed ? 'Acompañante' : 'Verificación'}</h3>
+                                <div className="h-1 w-20 bg-[#00ff88] mx-auto mb-6"></div>
+                                <p className="text-[#00ff88] text-[10px] uppercase font-bold text-center mb-4">{isConfirmed ? 'Registra un tripulante adicional:' : 'Confirma tu nombre para el manifiesto:'}</p>
                                 <input type="text" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder="NOMBRE DEL TRIPULANTE" className="w-full bg-black border border-[#00ff88]/30 p-4 font-mono-robot text-white mb-6 outline-none focus:border-[#00ff88] uppercase" />
                                 <button onClick={handleFinalConfirmation} disabled={isSaving || !confirmName.trim()} className="w-full py-4 bg-[#00ff88] text-black font-black uppercase tracking-widest hover:brightness-110 mb-4">{isSaving ? 'SYNC...' : 'REGISTRAR'}</button>
                                 <button onClick={() => setShowConfirmModal(false)} className="w-full text-white/40 text-xs font-black uppercase hover:text-white transition-all">CANCELAR</button>
@@ -558,7 +788,7 @@
                     {showShip && (
                         <div className="indigenous-ship-wrapper">
                             <img src="nave.png" className="ship-model" alt="Capital Ship" />
-                            <div className="ship-banner">! NO FALTES !</div>
+                            <div className="ship-banner">¡BIENVENIDO {lastRegisteredName}!</div>
                         </div>
                     )}
                 </div>
