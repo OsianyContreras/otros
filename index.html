@@ -881,6 +881,215 @@
             }
         }
 
+        /* Holographic Access ID Card */
+        .id-card-container {
+            position: absolute;
+            width: 350px;
+            height: 200px;
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            box-shadow:
+                0 0 50px rgba(0, 242, 255, 0.1),
+                inset 0 0 20px rgba(0, 242, 255, 0.1);
+            overflow: hidden;
+            animation: id-glow 4s infinite alternate;
+            z-index: 600;
+        }
+
+        .id-card-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: id-shine 3s infinite;
+        }
+
+        @keyframes id-shine {
+            0% {
+                transform: translateX(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) rotate(45deg);
+            }
+        }
+
+        @keyframes id-glow {
+            from {
+                box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            }
+
+            to {
+                box-shadow: 0 0 60px rgba(0, 242, 255, 0.4);
+            }
+        }
+
+        .id-scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #00f2ff;
+            box-shadow: 0 0 10px #00f2ff;
+            animation: scan-move 2s linear infinite;
+        }
+
+        @keyframes scan-move {
+            0% {
+                top: 0;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+
+        .id-photo {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+            position: relative;
+        }
+
+        .id-photo::after {
+            content: '👤';
+            font-size: 40px;
+            opacity: 0.5;
+        }
+
+        .id-data-row {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            color: rgba(0, 242, 255, 0.6);
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+        }
+
+        .id-data-val {
+            font-size: 14px;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        /* Neural Energy Visualizer */
+        @keyframes neural-pulse {
+
+            0%,
+            100% {
+                filter: brightness(1) drop-shadow(0 0 5px var(--neon-primary));
+            }
+
+            50% {
+                filter: brightness(1.5) drop-shadow(0 0 20px var(--neon-primary));
+            }
+        }
+
+        .energy-reactive {
+            animation: neural-pulse 2s infinite ease-in-out;
+        }
+
+        .energy-reactive-fast {
+            animation: neural-pulse 0.5s infinite ease-in-out;
+        }
+
+        /* Tactical HUD Map */
+        .hud-map-container {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            background: #050a10;
+            border: 1px solid rgba(188, 19, 254, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            background-image:
+                linear-gradient(rgba(188, 19, 254, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(188, 19, 254, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .hud-radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            background: conic-gradient(from 0deg, rgba(188, 19, 254, 0.4), transparent 90deg);
+            transform-origin: center;
+            transform: translate(-50%, -50%);
+            animation: radar-rotate 4s linear infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes radar-rotate {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .hud-target {
+            position: absolute;
+            top: 40%;
+            left: 60%;
+            width: 10px;
+            height: 10px;
+            background: #ff0000;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff0000;
+            animation: target-pulse 1s infinite alternate;
+        }
+
+        @keyframes target-pulse {
+            from {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            to {
+                transform: scale(1.4);
+                opacity: 1;
+            }
+        }
+
+        .hud-coords {
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            color: #bc13fe;
+            text-align: right;
+        }
+
+        .hud-status {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 8px;
+            font-weight: black;
+            color: #00ff88;
+            letter-spacing: 1px;
+        }
+
         /* Stardust Click FX */
         .stardust-fx {
             position: fixed;
@@ -1189,6 +1398,24 @@
             );
         };
 
+        const TacticalHUDMap = () => (
+            <div className="hud-map-container group cursor-pointer" onClick={() => window.open('https://maps.app.goo.gl/3NfC5yvA7W8w6E7n7', '_blank')}>
+                <div className="hud-radar-sweep"></div>
+                <div className="hud-target"></div>
+                <div className="hud-status animate-pulse">SATELLITE_SYNC_ACTIVE [PUEBLA_MX]</div>
+                <div className="hud-coords">
+                    LAT: 21.162026<br />
+                    LON: -86.878400<br />
+                    ALT: 12.4m
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div className="absolute bottom-2 left-3 flex items-center gap-2">
+                    <MapPinIcon className="w-4 h-4 text-[#bc13fe] animate-bounce" />
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Guadalupana Base</span>
+                </div>
+            </div>
+        );
+
         const App = () => {
             const [view, setView] = useState('invite');
             const [audioState, setAudioState] = useState('idle');
@@ -1208,6 +1435,7 @@
             const [user, setUser] = useState(null);
             const [db, setDb] = useState(null);
             const [showShip, setShowShip] = useState(false);
+            const [showIDCard, setShowIDCard] = useState(false);
 
             // New interaction flags
             const [hasProcessedMessage, setHasProcessedMessage] = useState(false);
@@ -1252,14 +1480,22 @@
                 window.speechSynthesis.speak(dummy);
 
                 playBeep(880, 'sine', 0.5);
-                setShowIntro(false);
 
-                // Start Ambient Audio
-                startAmbient();
+                // Transition to ID Card
+                setShowIDCard(true);
 
-                // Reactive Title pulse
-                setIsTitleReactive(true);
-                setTimeout(() => setIsTitleReactive(false), 2000);
+                // Auto-transition to home after showing ID Card
+                setTimeout(() => {
+                    playBeep(1200, 'square', 0.1); // Access Granted sound
+                    setShowIDCard(false);
+                    setShowIntro(false);
+                    // Start Ambient Audio
+                    startAmbient();
+
+                    // Reactive Title pulse
+                    setIsTitleReactive(true);
+                    setTimeout(() => setIsTitleReactive(false), 2000);
+                }, 4000);
             };
 
             const startAmbient = () => {
@@ -1682,31 +1918,60 @@
                     {/* Splash Intro - Biometric */}
                     {showIntro && (
                         <div className="fixed inset-0 z-[500] bg-black flex flex-col items-center justify-center p-6 text-center">
-                            <div className="holo-3d-container">
-                                <div className="moon-sphere">
-                                    <div className="moon-craters"></div>
-                                </div>
-                                <div className="orbit-system">
-                                    <div className="orbit-rotate-container">
-                                        <div className="orbital-ring"></div>
-                                        <div className="holo-3d-text-wrapper">
-                                            <div className="holo-3d-text text-osiany">OSIANY</div>
-                                            <div className="holo-3d-text text-56">56</div>
+                            {!showIDCard ? (
+                                <>
+                                    <div className="holo-3d-container energy-reactive-fast">
+                                        <div className="moon-sphere">
+                                            <div className="moon-craters"></div>
+                                        </div>
+                                        <div className="orbit-system">
+                                            <div className="orbit-rotate-container">
+                                                <div className="orbital-ring"></div>
+                                                <div className="holo-3d-text-wrapper">
+                                                    <div className="holo-3d-text text-osiany">OSIANY</div>
+                                                    <div className="holo-3d-text text-56">56</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                    <h2 className="text-4xl font-black text-white mb-4 tracking-tighter">PROTOCOLO DE ACCESO</h2>
+                                    <p className="font-mono-robot text-[#00f2ff] text-[10px] animate-pulse uppercase tracking-[0.2em] mb-8 max-w-xs">
+                                        INICIANDO RECONOCIMIENTO BIOMÉTRICO...<br />
+                                        SINCRONIZANDO NÚCLEO DE VOZ...
+                                    </p>
+                                    <button
+                                        onClick={unlockAudio}
+                                        className="px-8 py-3 bg-[#00f2ff] text-black font-black uppercase text-xs tracking-[0.3em] hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,242,255,0.5)]"
+                                    >
+                                        Iniciar Protocolo
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500">
+                                    <div className="id-card-container">
+                                        <div className="id-scan-line"></div>
+                                        <div className="flex items-center mb-6">
+                                            <div className="id-photo"></div>
+                                            <div className="text-left flex-1">
+                                                <div className="id-data-row">Identidad</div>
+                                                <div className="id-data-val mb-2">OSIANY</div>
+                                                <div className="id-data-row">Nivel Protocolo</div>
+                                                <div className="id-data-val">56 ALPHA</div>
+                                            </div>
+                                        </div>
+                                        <div className="border-t border-white/10 pt-4 flex justify-between items-end">
+                                            <div>
+                                                <div className="id-data-row">Estatus</div>
+                                                <div className="text-[#00ff88] font-bold text-[10px] animate-pulse">ACCESO CONCEDIDO</div>
+                                            </div>
+                                            <div className="text-[8px] text-white/30 font-mono">ID: OS-056-INV</div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-8 font-mono-robot text-[#00f2ff] text-[10px] uppercase tracking-[0.5em] animate-pulse">
+                                        Sincronizando Identidad Neural...
+                                    </div>
                                 </div>
-                            </div>
-                            <h2 className="text-4xl font-black text-white mb-4 tracking-tighter">PROTOCOLO DE ACCESO</h2>
-                            <p className="font-mono-robot text-[#00f2ff] text-[10px] animate-pulse uppercase tracking-[0.2em] mb-8 max-w-xs">
-                                INICIANDO RECONOCIMIENTO BIOMÉTRICO...<br />
-                                SINCRONIZANDO NÚCLEO DE VOZ...
-                            </p>
-                            <button
-                                onClick={unlockAudio}
-                                className="px-8 py-3 bg-[#00f2ff] text-black font-black uppercase text-xs tracking-[0.3em] hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,242,255,0.5)]"
-                            >
-                                Iniciar Protocolo
-                            </button>
+                            )}
                         </div>
                     )}
 
@@ -1778,7 +2043,7 @@
                                             </button>
                                         </div>
                                         <h1
-                                            className={`text-responsive-title font-black tracking-tighter leading-none mb-2 glitch title-premium transition-all duration-300 ${isTitleReactive ? 'scale-110 !text-white !drop-shadow-[0_0_50px_var(--neon-primary)]' : ''}`}
+                                            className={`text-responsive-title font-black tracking-tighter leading-none mb-2 glitch title-premium transition-all duration-300 energy-reactive ${isTitleReactive ? 'scale-110 !text-white !drop-shadow-[0_0_50px_var(--neon-primary)]' : ''}`}
                                             data-text="OSIANY"
                                             onClick={() => { setIsTitleReactive(true); setTimeout(() => setIsTitleReactive(false), 500); playBeep(2000, 'sine', 0.1); }}
                                         >
@@ -1799,14 +2064,8 @@
                                             <span className="font-mono-robot text-[#00f2ff] font-bold">17:00 HRS</span>
                                         </div>
 
-                                        {/* Location Link */}
-                                        <a href="https://www.google.com/maps/search/?api=1&query=21.162026,-86.878400" target="_blank" className="flex items-center justify-between p-4 bg-white/5 border-l-4 border-[#bc13fe] rounded-r-md group hover:bg-[#bc13fe]/20 transition-all cursor-pointer">
-                                            <div className="flex items-center gap-3">
-                                                <MapPinIcon className="w-6 h-6 text-[#bc13fe] group-hover:animate-bounce" />
-                                                <span className="text-responsive-data font-black text-glow-purple uppercase">GUADALUPANA</span>
-                                            </div>
-                                            <span className="text-xs font-black text-[#bc13fe] group-hover:translate-x-1 transition-transform">ABRIR MAPA ↗</span>
-                                        </a>
+                                        {/* Tactical HUD Map View */}
+                                        <TacticalHUDMap />
                                     </RevealSection>
 
                                     {/* AI Message Interaction */}
