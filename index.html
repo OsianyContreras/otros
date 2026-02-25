@@ -523,76 +523,95 @@
             }
         }
 
-        /* Biometric Scanner CSS */
-        .scanner-lens {
+        /* Global Scan HUD */
+        .global-scan-line {
             position: fixed;
-            width: 250px;
-            height: 250px;
-            border: 2px solid var(--neon-accent);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--neon-accent), transparent);
+            box-shadow: 0 0 15px var(--neon-accent);
+            opacity: 0.3;
+            z-index: 1000;
+            pointer-events: none;
+            animation: mobile-scan 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes mobile-scan {
+            0% {
+                top: -5%;
+            }
+
+            100% {
+                top: 105%;
+            }
+        }
+
+        .neural-ripple {
+            position: fixed;
+            border: 1px solid var(--neon-primary);
             border-radius: 50%;
             pointer-events: none;
-            z-index: 100;
-            box-shadow: 0 0 50px var(--neon-accent), inset 0 0 30px var(--neon-accent);
-            mix-blend-mode: screen;
-            opacity: 0.4;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            transition: transform 0.1s ease-out;
+            z-index: 50;
+            animation: ripple-out 0.8s ease-out forwards;
+            box-shadow: 0 0 20px var(--neon-primary);
         }
 
-        .scanner-grid {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-            animation: scanner-rotate 10s linear infinite;
-        }
-
-        @keyframes scanner-rotate {
-            from {
-                transform: rotate(0deg);
+        @keyframes ripple-out {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                transform: translate(-50%, -50%);
             }
 
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes animate-spin-slow {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .scanner-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: var(--neon-accent);
-            box-shadow: 0 0 10px var(--neon-accent);
-            animation: scan-vertical 2s ease-in-out infinite;
-        }
-
-        @keyframes scan-vertical {
-
-            0%,
             100% {
-                top: 0;
-            }
-
-            50% {
-                top: 100%;
+                width: 150px;
+                height: 150px;
+                opacity: 0;
+                transform: translate(-50%, -50%);
             }
         }
+
+        .hud-bracket {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-color: var(--neon-primary);
+            opacity: 0.4;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .top-left {
+            top: 20px;
+            left: 20px;
+            border-top: 2px solid;
+            border-left: 2px solid;
+        }
+
+        .top-right {
+            top: 20px;
+            right: 20px;
+            border-top: 2px solid;
+            border-right: 2px solid;
+        }
+
+        .bottom-left {
+            bottom: 20px;
+            left: 20px;
+            border-bottom: 2px solid;
+            border-left: 2px solid;
+        }
+
+        .bottom-right {
+            bottom: 20px;
+            right: 20px;
+            border-bottom: 2px solid;
+            border-right: 2px solid;
+        }
+
 
         /* Interface Glitch Overlay */
         .glitch-transition {
@@ -1316,37 +1335,19 @@
             );
         };
 
-        const BiometricScanner = () => {
-            const [pos, setPos] = useState({ x: -300, y: -300 });
-
-            useEffect(() => {
-                const handleMove = (e) => {
-                    const x = e.clientX || (e.touches ? e.touches[0].clientX : -300);
-                    const y = e.clientY || (e.touches ? e.touches[0].clientY : -300);
-                    setPos({ x: x - 125, y: y - 125 });
-                };
-                window.addEventListener('mousemove', handleMove);
-                window.addEventListener('touchmove', handleMove);
-                return () => {
-                    window.removeEventListener('mousemove', handleMove);
-                    window.removeEventListener('touchmove', handleMove);
-                };
-            }, []);
-
-            return (
-                <div
-                    className="scanner-lens"
-                    style={{
-                        transform: `translate(${pos.x}px, ${pos.y}px)`,
-                        display: pos.x < -200 ? 'none' : 'flex'
-                    }}
-                >
-                    <div className="scanner-grid"></div>
-                    <div className="scanner-line"></div>
-                    <div className="text-[8px] font-black text-[#00ff88] absolute bottom-4 uppercase tracking-widest">Scanning Bio-Data...</div>
+        const GlobalScanHUD = () => (
+            <>
+                <div className="global-scan-line"></div>
+                <div className="hud-bracket top-left"></div>
+                <div className="hud-bracket top-right"></div>
+                <div className="hud-bracket bottom-left"></div>
+                <div className="hud-bracket bottom-right"></div>
+                <div className="fixed top-8 left-8 text-[8px] font-mono-robot text-[#00f2ff]/30 z-50 pointer-events: none">
+                    OS-56_BATT_100%<br />
+                    OS-56_TEMP_36.5C
                 </div>
-            );
-        };
+            </>
+        );
 
         const TerminalText = ({ text, delay = 30, onComplete, sync = true }) => {
             const [displayedText, setDisplayedText] = useState('');
@@ -1526,7 +1527,7 @@
                     // Reactive Title pulse
                     setIsTitleReactive(true);
                     setTimeout(() => setIsTitleReactive(false), 2000);
-                }, 4000);
+                }, 7000);
             };
 
             const startAmbient = () => {
@@ -1706,16 +1707,16 @@
                 const handleClick = (e) => {
                     const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
                     const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-                    createStardust(x, y);
+                    createNeuralRipple(x, y);
 
-                    // Show radial menu on long press or right click could be too complex
-                    // For now, let's just make it a toggle on a specific area or just show it
-                    if (e.detail === 2) { // Double click for radial menu
+                    // Show radial menu on double tap
+                    if (e.detail === 2) {
                         setRadialMenu({ show: true, x, y });
                         setTimeout(() => setRadialMenu({ show: false, x: 0, y: 0 }), 3000);
                     }
                 };
                 window.addEventListener('mousedown', handleClick);
+                window.addEventListener('touchstart', (e) => handleClick(e.touches[0]));
 
                 init();
                 animate();
@@ -1727,30 +1728,13 @@
                 };
             }, [theme]);
 
-            const createStardust = (x, y) => {
-                for (let i = 0; i < 8; i++) {
-                    const el = document.createElement('div');
-                    el.className = 'stardust-fx';
-                    el.style.left = x + 'px';
-                    el.style.top = y + 'px';
-                    document.body.appendChild(el);
-
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = Math.random() * 5 + 2;
-                    const vx = Math.cos(angle) * speed;
-                    const vy = Math.sin(angle) * speed;
-
-                    let opacity = 1;
-                    const anim = () => {
-                        el.style.left = parseFloat(el.style.left) + vx + 'px';
-                        el.style.top = parseFloat(el.style.top) + vy + 'px';
-                        opacity -= 0.02;
-                        el.style.opacity = opacity;
-                        if (opacity > 0) requestAnimationFrame(anim);
-                        else el.remove();
-                    };
-                    anim();
-                }
+            const createNeuralRipple = (x, y) => {
+                const ripple = document.createElement('div');
+                ripple.className = 'neural-ripple';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                document.body.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 800);
             };
 
             const handleCardTilt = (e) => {
@@ -1931,7 +1915,7 @@
 
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center p-4 relative pb-24 transition-colors duration-500">
-                    <BiometricScanner />
+                    <GlobalScanHUD />
                     <RadialMenu
                         active={radialMenu.show}
                         x={radialMenu.x}
@@ -1965,7 +1949,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <h2 className="text-4xl font-black text-white mb-4 tracking-tighter">PROTOCOLO DE ACCESO</h2>
+                                    <h2 className="text-4xl font-black text-white mb-4 tracking-tighter">PROTOCOLO: INVITACION</h2>
                                     <p className="font-mono-robot text-[#00f2ff] text-[10px] animate-pulse uppercase tracking-[0.2em] mb-8 max-w-xs">
                                         INICIANDO RECONOCIMIENTO BIOMÉTRICO...<br />
                                         SINCRONIZANDO NÚCLEO DE VOZ...
