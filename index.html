@@ -58,19 +58,27 @@
             transition: all 0.5s ease;
         }
 
-        /* SVG Neural Background */
-        .neural-bg {
+        /* Neural Background Canvas */
+        #neural-canvas {
             position: fixed;
             inset: 0;
-            background-image:
-                radial-gradient(circle at 50% 50%, rgba(188, 19, 254, 0.1) 0%, transparent 80%),
-                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10L90 90M90 10L10 90' stroke='rgba(0, 242, 255, 0.05)' stroke-width='0.5' fill='none'/%3E%3Ccircle cx='10' cy='10' r='1' fill='rgba(0, 242, 255, 0.2)'/%3E%3Ccircle cx='90' cy='90' r='1' fill='rgba(0, 242, 255, 0.2)'/%3E%3C/svg%3E");
             z-index: -1;
-            opacity: 0.6;
+            background: var(--bg-deep);
         }
 
         .font-mono-robot {
             font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Glassmorphism 2.0 */
+        .glass-premium {
+            background: rgba(5, 10, 20, 0.7);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(0, 242, 255, 0.05);
         }
 
         /* Glitch Effect */
@@ -130,21 +138,67 @@
 
         @keyframes ship-fly {
             0% {
-                transform: translate(-100vw, 50vh) scale(0.6);
+                transform: translate(-100vw, 50vh) scale(0.4) rotate(15deg);
                 opacity: 0;
             }
 
-            10% {
+            5% {
                 opacity: 1;
             }
 
-            90% {
+            15% {
+                transform: translate(-20vw, 20vh) scale(0.6) rotate(10deg);
+            }
+
+            85% {
+                transform: translate(80vw, -40vh) scale(1.2) rotate(5deg);
                 opacity: 1;
             }
 
             100% {
-                transform: translate(150vw, -100vh) scale(1.5);
+                transform: translate(200vw, -100vh) scale(2) rotate(0deg);
                 opacity: 0;
+            }
+        }
+
+        /* Super Thick Warp Speed Trail */
+        .warp-trail {
+            position: absolute;
+            top: 50%;
+            right: 85%;
+            width: 500px;
+            height: 25px;
+            /* Thicker for more impact */
+            background: linear-gradient(to left,
+                    var(--neon-primary),
+                    var(--neon-secondary),
+                    var(--neon-accent),
+                    transparent);
+            filter: blur(8px);
+            /* Higher blur for background glow effect */
+            opacity: 0;
+            animation: warp-pulse 0.4s infinite;
+            border-radius: 50px;
+            z-index: 2;
+            /* Behind banner (15) and ship (10) */
+            box-shadow:
+                0 0 30px var(--neon-primary),
+                0 0 60px var(--neon-secondary);
+        }
+
+        @keyframes warp-pulse {
+
+            0%,
+            100% {
+                opacity: 0.8;
+                transform: scaleX(1) scaleY(1);
+                filter: blur(4px);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scaleX(1.5) scaleY(1.2);
+                filter: blur(2px);
             }
         }
 
@@ -182,7 +236,8 @@
 
         .ship-banner {
             position: absolute;
-            z-index: 5;
+            z-index: 15;
+            /* Above trail and ship if needed, or between */
             top: 65%;
             /* Even closer vertically */
             left: 5%;
@@ -191,12 +246,12 @@
             /* White text for maximum contrast */
             padding: 8px 25px;
             /* More padding for a solid box look */
-            background: rgba(0, 0, 0, 0.85);
-            /* Solid dark background to block out stars */
+            background: rgba(0, 0, 0, 0.9);
+            /* Darker background */
             border: 2px solid #ff0000;
             /* Sharp red border */
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-            /* Outer glow for the box */
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+            /* More intense glow */
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             font-size: 18px;
@@ -291,6 +346,9 @@
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 242, 255, 0.05);
             position: relative;
             overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: transform 0.1s ease-out;
         }
 
         .card-container::before {
@@ -353,16 +411,32 @@
         }
 
         .title-premium {
-            font-size: clamp(3.5rem, 15vw, 6.5rem) !important;
+            font-size: clamp(3.2rem, 15vw, 6.5rem) !important;
             white-space: nowrap;
             color: #fff;
-            -webkit-text-stroke: 1.5px black;
-            /* Sharp black contour for each letter */
+            -webkit-text-stroke: 1px rgba(0, 0, 0, 0.5);
             text-shadow:
                 0 0 10px var(--neon-primary),
                 0 0 20px var(--neon-primary),
-                0 0 40px var(--neon-primary);
-            animation: title-float 4s ease-in-out infinite, glitch-anim 0.3s infinite;
+                0 0 40px var(--neon-primary),
+                0 0 80px rgba(0, 242, 255, 0.3);
+            animation: title-float 4s ease-in-out infinite;
+            background: linear-gradient(to bottom, #fff 40%, var(--neon-primary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Reveal Animations */
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .reveal-up.active {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* Particle Background */
@@ -409,8 +483,7 @@
 </head>
 
 <body>
-    <canvas id="particle-canvas"></canvas>
-    <div class="neural-bg"></div>
+    <canvas id="neural-canvas"></canvas>
     <div id="root"></div>
 
     <script type="module">
@@ -470,6 +543,34 @@
             );
         };
 
+        const useIntersectionObserver = (ref, options) => {
+            const [isIntersecting, setIntersecting] = useState(false);
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(([entry]) => {
+                    if (entry.isIntersecting) {
+                        setIntersecting(true);
+                        if (options?.triggerOnce) observer.unobserve(entry.target);
+                    }
+                }, options);
+
+                if (ref.current) observer.observe(ref.current);
+                return () => observer.disconnect();
+            }, [ref, options]);
+
+            return isIntersecting;
+        };
+
+        const RevealSection = ({ children, className = "" }) => {
+            const ref = useRef(null);
+            const isVisible = useIntersectionObserver(ref, { triggerOnce: true, threshold: 0.1 });
+            return (
+                <div ref={ref} className={`${className} reveal-up ${isVisible ? 'active' : ''}`}>
+                    {children}
+                </div>
+            );
+        };
+
         const App = () => {
             const [view, setView] = useState('invite');
             const [audioState, setAudioState] = useState('idle');
@@ -490,6 +591,11 @@
             const [db, setDb] = useState(null);
             const [showShip, setShowShip] = useState(false);
 
+            // New interaction flags
+            const [hasProcessedMessage, setHasProcessedMessage] = useState(false);
+            const [hasSyncedToast, setHasSyncedToast] = useState(false);
+            const canConfirm = hasProcessedMessage && hasSyncedToast;
+
             const audioRef = useRef(null);
             // API Key obfuscated to prevent automated leaks (Base64)
             const _k = "QUl6YVN5Q2tRWWZ6bm5nZ0pYVnc1aVBmR3JLVkh1OUVqOTJMM1Rz";
@@ -502,11 +608,57 @@
 
             useEffect(() => {
                 const timer = setTimeout(() => {
-                    setShowIntro(false);
-                    playBeep(880, 'sine', 0.5);
-                }, 3500);
+                    // Solo cerrar automáticamente si el usuario no ha interactuado
+                    // setShowIntro(false);
+                }, 8000);
                 return () => clearTimeout(timer);
             }, []);
+
+            const unlockAudio = () => {
+                // Unlock Web Audio
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                // Unlock Speech
+                const dummy = new SpeechSynthesisUtterance(' ');
+                window.speechSynthesis.speak(dummy);
+
+                playBeep(880, 'sine', 0.5);
+                setShowIntro(false);
+
+                // Start Ambient Audio
+                startAmbient();
+            };
+
+            const startAmbient = () => {
+                try {
+                    const context = new (window.AudioContext || window.webkitAudioContext)();
+                    const masterGain = context.createGain();
+                    masterGain.gain.value = 0.05; // Very low volume for ambience
+                    masterGain.connect(context.destination);
+
+                    const playTone = (freq, type, delay) => {
+                        const osc = context.createOscillator();
+                        const g = context.createGain();
+                        osc.type = type;
+                        osc.frequency.setValueAtTime(freq, context.currentTime + delay);
+                        g.gain.setValueAtTime(0, context.currentTime + delay);
+                        g.gain.linearRampToValueAtTime(0.5, context.currentTime + delay + 2);
+                        g.gain.linearRampToValueAtTime(0, context.currentTime + delay + 4);
+                        osc.connect(g);
+                        g.connect(masterGain);
+                        osc.start(context.currentTime + delay);
+                        osc.stop(context.currentTime + delay + 5);
+                    };
+
+                    const loop = () => {
+                        playTone(110, 'sine', 0);
+                        playTone(220, 'sine', 3);
+                        setTimeout(loop, 12000); // Repeat every 12s
+                    };
+                    loop();
+                } catch (e) { }
+            };
 
             const speak = (text) => {
                 if (!window.speechSynthesis) return;
@@ -559,51 +711,105 @@
                 initFirebase();
             }, [initFirebase]);
 
-            // Particle Engine
+            // Enhanced Neural Canvas Engine
             useEffect(() => {
-                const canvas = document.getElementById('particle-canvas');
+                const canvas = document.getElementById('neural-canvas');
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');
-                let particles = [];
-                const particleCount = 50;
+                let nodes = [];
+                let mouse = { x: null, y: null, radius: 150 };
 
-                const initParticles = () => {
+                const init = () => {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
-                    particles = [];
-                    for (let i = 0; i < particleCount; i++) {
-                        particles.push({
+                    nodes = [];
+                    const count = Math.min(60, (canvas.width * canvas.height) / 15000);
+                    for (let i = 0; i < count; i++) {
+                        nodes.push({
                             x: Math.random() * canvas.width,
                             y: Math.random() * canvas.height,
-                            size: Math.random() * 2,
-                            speedX: (Math.random() - 0.5) * 0.5,
-                            speedY: (Math.random() - 0.5) * 0.5,
+                            vx: (Math.random() - 0.5) * 0.5,
+                            vy: (Math.random() - 0.5) * 0.5,
+                            radius: Math.random() * 2 + 1
                         });
                     }
                 };
 
-                const drawParticles = () => {
+                const animate = () => {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = theme === 'elite' ? 'rgba(255, 204, 0, 0.3)' : theme === 'overload' ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 242, 255, 0.3)';
-                    particles.forEach(p => {
-                        p.x += p.speedX;
-                        p.y += p.speedY;
-                        if (p.x < 0) p.x = canvas.width;
-                        if (p.x > canvas.width) p.x = 0;
-                        if (p.y < 0) p.y = canvas.height;
-                        if (p.y > canvas.height) p.y = 0;
+
+                    const primaryColor = theme === 'neural' ? '0, 242, 255' : theme === 'overload' ? '255, 0, 0' : '255, 204, 0';
+
+                    nodes.forEach((node, i) => {
+                        node.x += node.vx;
+                        node.y += node.vy;
+
+                        if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+                        if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+
+                        // Mouse interact
+                        if (mouse.x) {
+                            const dx = node.x - mouse.x;
+                            const dy = node.y - mouse.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < mouse.radius) {
+                                node.x += dx * 0.01;
+                                node.y += dy * 0.01;
+                            }
+                        }
+
                         ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${primaryColor}, 0.5)`;
                         ctx.fill();
+
+                        for (let j = i + 1; j < nodes.length; j++) {
+                            const other = nodes[j];
+                            const dx = node.x - other.x;
+                            const dy = node.y - other.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < 150) {
+                                ctx.beginPath();
+                                ctx.moveTo(node.x, node.y);
+                                ctx.lineTo(other.x, other.y);
+                                ctx.strokeStyle = `rgba(${primaryColor}, ${0.2 * (1 - dist / 150)})`;
+                                ctx.stroke();
+                            }
+                        }
                     });
-                    requestAnimationFrame(drawParticles);
+                    requestAnimationFrame(animate);
                 };
 
-                window.addEventListener('resize', initParticles);
-                initParticles();
-                drawParticles();
-                return () => window.removeEventListener('resize', initParticles);
+                const handleMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+                const handleTouchMove = (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; };
+
+                window.addEventListener('resize', init);
+                window.addEventListener('mousemove', handleMouseMove);
+                window.addEventListener('touchmove', handleTouchMove);
+                init();
+                animate();
+                return () => {
+                    window.removeEventListener('resize', init);
+                    window.removeEventListener('mousemove', handleMouseMove);
+                    window.removeEventListener('touchmove', handleTouchMove);
+                };
             }, [theme]);
+
+            const handleCardTilt = (e) => {
+                const card = e.currentTarget;
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            };
+
+            const resetTilt = (e) => {
+                e.currentTarget.style.transform = 'rotateX(0) rotateY(0)';
+            };
 
             const playBeep = (freq = 440, type = 'sine', duration = 0.1) => {
                 try {
@@ -697,6 +903,7 @@
                 setAiLogResponse(cleanRes);
                 speak(cleanRes);
                 setIsProcessingAI(false);
+                setHasProcessedMessage(true);
             };
 
             const handleToast = async () => {
@@ -712,6 +919,7 @@
                 setGalacticToast(cleanRes);
                 speak(cleanRes);
                 setIsProcessingAI(false);
+                setHasSyncedToast(true);
             };
 
             const handleFinalConfirmation = async () => {
@@ -751,15 +959,22 @@
                 <div className="min-h-screen flex flex-col items-center justify-center p-4 relative pb-24 transition-colors duration-500">
                     {/* Splash Intro - Biometric */}
                     {showIntro && (
-                        <div className="fixed inset-0 z-[500] bg-black flex flex-col items-center justify-center animate-out fade-out duration-1000 delay-[3000]">
-                            <div className="relative w-80 h-80 border-4 border-[#00f2ff]/20 rounded-full flex items-center justify-center mb-8">
-                                <div className="absolute inset-0 border-t-4 border-[#00f2ff] rounded-full animate-spin"></div>
-                                <img src="FELICIDADES II.png" className="w-72 h-72 object-contain animate-pulse" alt="Biometric Scanned Object" />
+                        <div className="fixed inset-0 z-[500] bg-black flex flex-col items-center justify-center p-6 text-center">
+                            <div className="relative w-64 h-64 border-2 border-[#00f2ff]/20 rounded-full flex items-center justify-center mb-8">
+                                <div className="absolute inset-0 border-t-2 border-[#00f2ff] rounded-full animate-spin"></div>
+                                <img src="FELICIDADES II.png" className="w-48 h-48 object-contain animate-pulse" alt="Biometric Scanned Object" />
                             </div>
-                            <div className="h-0.5 w-64 bg-white/10 relative overflow-hidden mb-4">
-                                <div className="absolute inset-0 bg-[#00f2ff] animate-[scan-y_2s_infinite]"></div>
-                            </div>
-                            <p className="font-mono-robot text-[#00f2ff] animate-pulse uppercase tracking-[0.5em] text-xs">Escaneo de ADN en curso...</p>
+                            <h2 className="text-xl font-black text-white italic mb-4 tracking-tighter uppercase">Protocolo Osiany 56</h2>
+                            <p className="font-mono-robot text-[#00f2ff] text-[10px] animate-pulse uppercase tracking-[0.2em] mb-8 max-w-xs">
+                                INICIANDO RECONOCIMIENTO BIOMÉTRICO...<br />
+                                SINCRONIZANDO NÚCLEO DE VOZ...
+                            </p>
+                            <button
+                                onClick={unlockAudio}
+                                className="px-8 py-3 bg-[#00f2ff] text-black font-black uppercase text-xs tracking-[0.3em] hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,242,255,0.5)]"
+                            >
+                                Iniciar Protocolo
+                            </button>
                         </div>
                     )}
 
@@ -799,8 +1014,12 @@
                         {view === 'invite' ? <UsersIcon className="w-6 h-6" /> : <HomeIcon className="w-6 h-6" />}
                     </button>
 
-                    <div className="w-full max-w-xl animate-in fade-in zoom-in duration-500">
-                        <div className="card-container p-8 sm:p-12 rounded-lg">
+                    <div className="w-full max-w-xl animate-in fade-in zoom-in duration-700">
+                        <div
+                            className="card-container p-8 sm:p-12 rounded-lg"
+                            onMouseMove={handleCardTilt}
+                            onMouseLeave={resetTilt}
+                        >
                             {view === 'invite' ? (
                                 <div className="space-y-10">
                                     <header className="text-center">
@@ -811,11 +1030,11 @@
                                         <CountdownTimer targetDate="March 14, 2026 17:00:00" />
                                     </header>
 
-                                    <div className="space-y-4">
+                                    <RevealSection className="space-y-4">
                                         {/* Date/Time Row */}
-                                        <div className="flex items-center justify-between p-4 bg-white/5 border-l-4 border-[#00f2ff] rounded-r-md">
+                                        <div className="flex items-center justify-between p-4 bg-white/5 border-l-4 border-[#00f2ff] rounded-r-md group hover:bg-white/10 transition-all">
                                             <div className="flex items-center gap-3">
-                                                <CalendarIcon className="w-6 h-6 text-[#00f2ff]" />
+                                                <CalendarIcon className="w-6 h-6 text-[#00f2ff] group-hover:scale-110 transition-transform" />
                                                 <span className="text-responsive-data font-black text-glow-cyan uppercase">14 MARZO</span>
                                             </div>
                                             <span className="font-mono-robot text-[#00f2ff] font-bold">17:00 HRS</span>
@@ -824,31 +1043,31 @@
                                         {/* Location Link */}
                                         <a href="https://www.google.com/maps/search/?api=1&query=21.162026,-86.878400" target="_blank" className="flex items-center justify-between p-4 bg-white/5 border-l-4 border-[#bc13fe] rounded-r-md group hover:bg-[#bc13fe]/20 transition-all cursor-pointer">
                                             <div className="flex items-center gap-3">
-                                                <MapPinIcon className="w-6 h-6 text-[#bc13fe]" />
+                                                <MapPinIcon className="w-6 h-6 text-[#bc13fe] group-hover:animate-bounce" />
                                                 <span className="text-responsive-data font-black text-glow-purple uppercase">GUADALUPANA</span>
                                             </div>
                                             <span className="text-xs font-black text-[#bc13fe] group-hover:translate-x-1 transition-transform">ABRIR MAPA ↗</span>
                                         </a>
-                                    </div>
+                                    </RevealSection>
 
                                     {/* AI Message Interaction */}
-                                    <div className="bg-black/60 border border-[#00f2ff]/20 p-6 rounded-md space-y-4">
+                                    <RevealSection className="bg-black/60 border border-[#00f2ff]/20 p-6 rounded-md space-y-4 shadow-[inset_0_0_20px_rgba(0,242,255,0.05)]">
                                         <div className="flex items-center gap-2 text-[#00ff88] text-xs font-black uppercase">
                                             <BotIcon className="w-4 h-4" /> Transmitir un mensaje
                                         </div>
                                         <input type="text" value={guestMessage} onChange={(e) => {
                                             setGuestMessage(e.target.value);
                                             if (e.target.value.length % 5 === 0) playBeep(200, 'square', 0.05);
-                                        }} placeholder="MENSAJE..." className="w-full bg-black/40 border border-white/10 p-3 font-mono-robot text-white focus:border-[#00f2ff] outline-none transition-all uppercase" />
+                                        }} placeholder="MENSAJE..." className="w-full bg-black/40 border border-white/10 p-3 font-mono-robot text-white focus:border-[#00f2ff] outline-none transition-all uppercase placeholder:opacity-30" />
                                         <button
                                             onClick={() => { playBeep(880); processLog(); }}
                                             disabled={isProcessingAI || !guestMessage}
-                                            className={`w-full py-4 font-black text-sm tracking-widest transition-all ${isProcessingAI && !galacticToast.includes('...') ? 'bg-[#00ff88] text-black animate-pulse' : 'bg-[#00f2ff] text-black hover:brightness-110'}`}
+                                            className={`w-full py-4 font-black text-sm tracking-widest transition-all shadow-lg ${isProcessingAI ? 'bg-[#00ff88] text-black animate-pulse' : 'bg-[#00f2ff] text-black hover:brightness-110 active:scale-95'}`}
                                         >
-                                            {isProcessingAI && !galacticToast.includes('...') ? 'PROCESANDO MENSAJE...' : 'PROCESAR'}
+                                            {isProcessingAI ? 'PROCESANDO MENSAJE...' : 'PROCESAR'}
                                         </button>
-                                        {aiLogResponse && <div className="p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 text-sm italic font-mono-robot text-[#00ff88] animate-pulse">{aiLogResponse}</div>}
-                                    </div>
+                                        {aiLogResponse && <div className="p-3 border-l-2 border-[#00ff88] bg-[#00ff88]/5 text-sm italic font-mono-robot text-[#00ff88] animate-in fade-in slide-in-from-left-2">{aiLogResponse}</div>}
+                                    </RevealSection>
 
                                     {/* Brindis AI */}
                                     <div className="text-center space-y-4">
@@ -883,10 +1102,14 @@
 
                                     <button
                                         onClick={() => setShowConfirmModal(true)}
-                                        disabled={showShip}
-                                        className={`w-full py-5 rounded-md text-xl btn-neural tracking-widest transition-all ${showShip ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                                        disabled={showShip || !canConfirm}
+                                        className={`w-full py-5 rounded-md text-xl btn-neural tracking-widest transition-all ${showShip || !canConfirm ? 'opacity-30 grayscale cursor-not-allowed border-dashed border-2 border-white/10' : 'animate-pulse'}`}
                                     >
-                                        {isConfirmed ? (showShip ? 'NAVE EN TRAYECTO...' : 'AÑADIR OTRO TRIPULANTE') : 'CONFIRMAR ACCESO'}
+                                        {!canConfirm ? (
+                                            <span className="text-xs">INTERACCIONES REQUERIDAS (MENSAJE + BRINDIS)</span>
+                                        ) : (
+                                            isConfirmed ? (showShip ? 'NAVE EN TRAYECTO...' : 'AÑADIR OTRO TRIPULANTE') : 'CONFIRMAR ACCESO'
+                                        )}
                                     </button>
                                 </div>
                             ) : (
@@ -920,13 +1143,17 @@
                                 <p className="text-[#00ff88] text-[10px] uppercase font-bold text-center mb-4">{isConfirmed ? 'Registra un tripulante adicional:' : 'Confirma tu nombre para el manifiesto:'}</p>
                                 <input type="text" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder="NOMBRE DEL TRIPULANTE" className="w-full bg-black border border-[#00ff88]/30 p-4 font-mono-robot text-white mb-6 outline-none focus:border-[#00ff88] uppercase" />
                                 <button onClick={handleFinalConfirmation} disabled={isSaving || !confirmName.trim()} className="w-full py-4 bg-[#00ff88] text-black font-black uppercase tracking-widest hover:brightness-110 mb-4">{isSaving ? 'SYNC...' : 'REGISTRAR'}</button>
-                                <button onClick={() => setShowConfirmModal(false)} className="w-full text-white/40 text-xs font-black uppercase hover:text-white transition-all">CANCELAR</button>
+                                <button onClick={() => { playBeep(220); setShowConfirmModal(false); }} className="w-full text-white/40 text-xs font-black uppercase hover:text-white transition-all">CANCELAR</button>
                             </div>
                         </div>
                     )}
                     {showShip && (
                         <div className="indigenous-ship-wrapper">
-                            <img src="nave.png" className="ship-model" alt="Capital Ship" />
+                            <div className="relative">
+                                <img src="nave.png" className="ship-model" alt="Capital Ship" />
+                                <div className="warp-trail"></div>
+                                <div className="warp-trail" style={{ top: '60%', transform: 'scale(0.8)' }}></div>
+                            </div>
                             <div className="ship-banner">¡BIENVENIDO {lastRegisteredName}!</div>
                         </div>
                     )}
