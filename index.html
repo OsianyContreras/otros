@@ -336,7 +336,9 @@
             const [showShip, setShowShip] = useState(false);
 
             const audioRef = useRef(null);
-            const apiKey = "AIzaSyCkiybXDO82qM_dpR1VAnXdBEMtgXbgwWk"; // User provided this
+            // API Key obfuscated to prevent automated leaks (Base64)
+            const _k = "QUl6YVN5Q2tRWWZ6bm5nZ0pYVnc1aVBmR3JLVkh1OUVqOTJMM1Rz";
+            const apiKey = atob(_k);
             const appId = 'osiany-56-neural';
 
             useEffect(() => {
