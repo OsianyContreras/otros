@@ -394,12 +394,18 @@
                         })
                     });
                     const data = await res.json();
-
                     if (data.error) {
+                        console.error("Gemini Error:", data.error);
                         return `Error API: ${data.error.message || 'Error desconocido'}`;
                     }
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error de formato en respuesta IA.";
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) {
+                        console.warn("No text in candidates:", data);
+                        return "La IA no devolvió respuesta. Reintenta.";
+                    }
+                    return text;
                 } catch (e) {
+                    console.error("Connection Error:", e);
                     return `Error de conexión: ${e.message}`;
                 }
             };
@@ -416,7 +422,8 @@
 
             const handleToast = async () => {
                 setIsProcessingAI(true);
-                const res = await callGemini("Genera un brindis corto y futurista para los 56 años de Osiany.", "Eres un sintetizador de poesía.");
+                setGalacticToast('Sincronizando con el cosmos...');
+                const res = await callGemini("Genera un brindis corto, muy futurista y festivo para los 56 años de Osiany.", "Eres un sintetizador de poesía cibernética.");
                 setGalacticToast(res);
                 setIsProcessingAI(false);
             };
@@ -501,8 +508,14 @@
 
                                     {/* Brindis AI */}
                                     <div className="text-center space-y-4">
-                                        <button onClick={handleToast} disabled={isProcessingAI} className="btn-secondary px-8 py-3 rounded-full text-xs font-black tracking-widest uppercase">Sincronizar Brindis</button>
-                                        {galacticToast && <p className="text-sm italic text-white/80 font-mono-robot leading-relaxed max-w-xs mx-auto animate-in fade-in slide-in-from-bottom-2">{galacticToast}</p>}
+                                        <button onClick={handleToast} disabled={isProcessingAI} className="btn-secondary px-8 py-3 rounded-full text-xs font-black tracking-widest uppercase disabled:opacity-50">
+                                            {isProcessingAI && galacticToast.includes('...') ? 'SINCRONIZANDO...' : 'Sincronizar Brindis'}
+                                        </button>
+                                        {galacticToast && (
+                                            <div className="p-4 border border-[#bc13fe]/30 bg-[#bc13fe]/5 rounded-md text-sm italic text-white/90 font-mono-robot leading-relaxed max-w-xs mx-auto animate-in fade-in slide-in-from-bottom-2">
+                                                {galacticToast}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <button onClick={() => isConfirmed ? null : setShowConfirmModal(true)} disabled={isConfirmed} className={`w-full py-5 rounded-md text-xl btn-neural tracking-widest ${isConfirmed ? 'opacity-50 grayscale' : ''}`}>
