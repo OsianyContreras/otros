@@ -3,8 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Osiany 56 - Neural Era Celebration</title>
+
+    <!-- PWA / Immersive Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#02040a">
+    <link rel="apple-touch-icon" href="luna.png">
 
     <!-- Metadatos para compartir -->
     <meta property="og:title" content="Osiany 56 - Neural Era Celebration">
@@ -724,7 +732,17 @@
             /* Remove z-index to allow 3D depth buffer to handle sorting */
             transform-style: preserve-3d;
             transform: translateZ(0);
-            animation: moon-float 8s ease-in-out infinite;
+            animation: moon-float 8s ease-in-out infinite, moon-glow 4s infinite alternate;
+        }
+
+        @keyframes moon-glow {
+            from {
+                box-shadow: inset -50px -50px 100px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 255, 255, 0.05);
+            }
+
+            to {
+                box-shadow: inset -50px -50px 100px rgba(0, 0, 0, 0.9), 0 0 80px rgba(255, 255, 255, 0.15);
+            }
         }
 
         .moon-craters {
@@ -992,11 +1010,13 @@
 
             0%,
             100% {
-                filter: brightness(1) drop-shadow(0 0 5px var(--neon-primary));
+                box-shadow: 0 0 5px var(--neon-primary);
+                brightness: 1;
             }
 
             50% {
-                filter: brightness(1.5) drop-shadow(0 0 20px var(--neon-primary));
+                box-shadow: 0 0 20px var(--neon-primary);
+                brightness: 1.2;
             }
         }
 
@@ -1479,6 +1499,17 @@
                 const dummy = new SpeechSynthesisUtterance(' ');
                 window.speechSynthesis.speak(dummy);
 
+                // Immersive Fullscreen Trigger
+                try {
+                    const de = document.documentElement;
+                    if (de.requestFullscreen) de.requestFullscreen();
+                    else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen();
+                    else if (de.msRequestFullscreen) de.msRequestFullscreen();
+                } catch (e) { console.warn("Fullscreen suppressed."); }
+
+                // Force scroll to hide address bar fallback
+                window.scrollTo(0, 1);
+
                 playBeep(880, 'sine', 0.5);
 
                 // Transition to ID Card
@@ -1920,7 +1951,7 @@
                         <div className="fixed inset-0 z-[500] bg-black flex flex-col items-center justify-center p-6 text-center">
                             {!showIDCard ? (
                                 <>
-                                    <div className="holo-3d-container energy-reactive-fast">
+                                    <div className="holo-3d-container">
                                         <div className="moon-sphere">
                                             <div className="moon-craters"></div>
                                         </div>
