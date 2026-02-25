@@ -509,12 +509,32 @@
             }, []);
 
             const speak = (text) => {
+                if (!window.speechSynthesis) return;
+
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
                 const utterance = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                utterance.voice = voices.find(v => v.lang.includes('es')) || voices[0];
-                utterance.pitch = 0.8;
-                utterance.rate = 1.1;
-                window.speechSynthesis.speak(utterance);
+
+                // Get voices
+                let voices = window.speechSynthesis.getVoices();
+
+                // On some mobile devices, voices load after the first interaction
+                if (voices.length === 0) {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        voices = window.speechSynthesis.getVoices();
+                        utterance.voice = voices.find(v => v.lang.includes('es')) || voices[0];
+                        window.speechSynthesis.speak(utterance);
+                    };
+                    // Still try to speak with default if onvoiceschanged doesn't fire
+                    utterance.voice = voices[0];
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    utterance.voice = voices.find(v => v.lang.includes('es')) || voices[0];
+                    utterance.pitch = 0.8;
+                    utterance.rate = 1.1;
+                    window.speechSynthesis.speak(utterance);
+                }
             };
 
             const initFirebase = useCallback(async () => {
@@ -786,7 +806,7 @@
                                     <header className="text-center">
                                         <p className="font-mono-robot text-[#00f2ff] text-xs tracking-[0.4em] mb-4 uppercase">Neural Access Granted</p>
                                         <h1 className="text-responsive-title font-black tracking-tighter leading-none mb-2 glitch title-premium" data-text="OSIANY">OSIANY</h1>
-                                        <div className="inline-block px-4 py-1 border border-[#bc13fe] text-[#bc13fe] text-xl font-black bg-[#bc13fe]/10">PHASE: 56</div>
+                                        <div className="inline-block px-4 py-1 border border-[#bc13fe] text-[#bc13fe] text-xl font-black bg-[#bc13fe]/10 mt-6 relative z-10">PHASE: 56</div>
 
                                         <CountdownTimer targetDate="March 14, 2026 17:00:00" />
                                     </header>
