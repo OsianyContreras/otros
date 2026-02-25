@@ -24,10 +24,29 @@
 
     <style>
         :root {
-            --neon-cyan: #00f2ff;
-            --neon-purple: #bc13fe;
-            --neon-emerald: #00ff88;
+            --neon-primary: #00f2ff;
+            --neon-secondary: #bc13fe;
+            --neon-accent: #00ff88;
             --bg-deep: #02040a;
+            --text-main: #b0fbff;
+        }
+
+        .theme-overload {
+            --neon-primary: #ff0000;
+            --neon-secondary: #ffcc00;
+            /* Gold/Orange for contrast */
+            --neon-accent: #ff4400;
+            --bg-deep: #050000;
+            --text-main: #ffcccc;
+        }
+
+        .theme-elite {
+            --neon-primary: #ffcc00;
+            --neon-secondary: #ffffff;
+            /* White for maximum contrast */
+            --neon-accent: #ffffff;
+            --bg-deep: #0a0800;
+            --text-main: #fff5cc;
         }
 
         body {
@@ -35,8 +54,8 @@
             background: var(--bg-deep);
             overflow-x: hidden;
             font-family: 'Orbitron', sans-serif;
-            color: #b0fbff;
-            font-size: 16px;
+            color: var(--text-main);
+            transition: all 0.5s ease;
         }
 
         /* SVG Neural Background */
@@ -72,13 +91,13 @@
         }
 
         .glitch::before {
-            color: var(--neon-cyan);
+            color: var(--neon-primary);
             z-index: -1;
             animation: glitch-anim 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
         }
 
         .glitch::after {
-            color: var(--neon-purple);
+            color: var(--neon-secondary);
             z-index: -2;
             animation: glitch-anim 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
         }
@@ -281,43 +300,44 @@
             left: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            background: linear-gradient(90deg, transparent, var(--neon-primary), transparent);
             animation: scan-y 4s linear infinite;
         }
 
         .btn-neural {
-            background: linear-gradient(45deg, var(--neon-cyan), #fff);
+            background: linear-gradient(45deg, var(--neon-primary), #fff);
             color: #000;
             font-weight: 900;
             text-transform: uppercase;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 15px var(--neon-primary);
         }
 
         .btn-neural:hover {
             transform: scale(1.02) translateY(-2px);
-            box-shadow: 0 0 30px var(--neon-cyan);
+            box-shadow: 0 0 30px var(--neon-primary);
         }
 
         .btn-secondary {
-            border: 1px solid var(--neon-purple);
-            color: var(--neon-purple);
-            background: rgba(188, 19, 254, 0.05);
+            border: 1px solid var(--neon-secondary);
+            color: var(--neon-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            /* Fix rgba variable issue */
             transition: all 0.3s ease;
         }
 
         .btn-secondary:hover {
-            background: var(--neon-purple);
+            background: var(--neon-secondary);
             color: #fff;
-            box-shadow: 0 0 20px var(--neon-purple);
+            box-shadow: 0 0 20px var(--neon-secondary);
         }
 
         .text-glow-cyan {
-            text-shadow: 0 0 10px var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-primary);
         }
 
         .text-glow-purple {
-            text-shadow: 0 0 10px var(--neon-purple);
+            text-shadow: 0 0 10px var(--neon-secondary);
         }
 
         @keyframes title-float {
@@ -336,15 +356,12 @@
             font-size: clamp(3.5rem, 15vw, 6.5rem) !important;
             white-space: nowrap;
             color: #fff;
-            -webkit-text-stroke: 2px black;
-            /* Bold contour for the title */
+            -webkit-text-stroke: 1.5px black;
+            /* Sharp black contour for each letter */
             text-shadow:
-                0 0 20px var(--neon-cyan),
-                0 0 40px var(--neon-cyan),
-                -2px -2px 0 #000,
-                2px -2px 0 #000,
-                -2px 2px 0 #000,
-                2px 2px 0 #000;
+                0 0 10px var(--neon-primary),
+                0 0 20px var(--neon-primary),
+                0 0 40px var(--neon-primary);
             animation: title-float 4s ease-in-out infinite, glitch-anim 0.3s infinite;
         }
 
@@ -415,6 +432,9 @@
         const HomeIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>);
         const ShareIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>);
 
+        const GiftIcon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 12V8H4v4" /><path d="M2 4h20v4H2z" /><path d="M12 22V8" /><path d="M12 8H7.5a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8z" /><path d="M12 8h4.5a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8z" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /></svg>);
+        const Volume2Icon = ({ className }) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>);
+
         const CountdownTimer = ({ targetDate }) => {
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -458,6 +478,9 @@
             const [isProcessingAI, setIsProcessingAI] = useState(false);
             const [isSaving, setIsSaving] = useState(false);
             const [lastRegisteredName, setLastRegisteredName] = useState('');
+            const [theme, setTheme] = useState('neural');
+            const [showIntro, setShowIntro] = useState(true);
+            const [showGiftModal, setShowGiftModal] = useState(false);
             const [galacticToast, setGalacticToast] = useState('');
             const [isConfirmed, setIsConfirmed] = useState(false);
             const [confirmName, setConfirmName] = useState('');
@@ -474,69 +497,93 @@
             const appId = 'osiany-56-neural';
 
             useEffect(() => {
-                const init = async () => {
-                    // Cargar desde LocalStorage siempre como base/fallback
-                    const localData = JSON.parse(localStorage.getItem(`${appId}_guests`) || '[]');
-                    setAttendees(localData);
+                document.body.className = theme === 'neural' ? '' : `theme-${theme}`;
+            }, [theme]);
 
-                    if (!window.FirebaseCore || typeof __firebase_config === 'undefined') return;
-                    try {
-                        const { initializeApp, getFirestore, getAuth, signInAnonymously, onAuthStateChanged } = window.FirebaseCore;
-                        const config = JSON.parse(__firebase_config);
-                        const app = initializeApp(config);
-                        const auth = getAuth(app);
-                        const firestore = getFirestore(app);
-                        setDb(firestore);
-                        await signInAnonymously(auth);
-                        onAuthStateChanged(auth, setUser);
-                    } catch (e) { console.warn("Firebase offline mode."); }
-                };
-                init();
-
-                // Particle Engine
-                const canvas = document.getElementById('particle-canvas');
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    let particles = [];
-                    const particleCount = 50;
-
-                    const initParticles = () => {
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                        particles = [];
-                        for (let i = 0; i < particleCount; i++) {
-                            particles.push({
-                                x: Math.random() * canvas.width,
-                                y: Math.random() * canvas.height,
-                                size: Math.random() * 2,
-                                speedX: (Math.random() - 0.5) * 0.5,
-                                speedY: (Math.random() - 0.5) * 0.5,
-                            });
-                        }
-                    };
-
-                    const drawParticles = () => {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
-                        particles.forEach(p => {
-                            p.x += p.speedX;
-                            p.y += p.speedY;
-                            if (p.x < 0) p.x = canvas.width;
-                            if (p.x > canvas.width) p.x = 0;
-                            if (p.y < 0) p.y = canvas.height;
-                            if (p.y > canvas.height) p.y = 0;
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                            ctx.fill();
-                        });
-                        requestAnimationFrame(drawParticles);
-                    };
-
-                    window.addEventListener('resize', initParticles);
-                    initParticles();
-                    drawParticles();
-                }
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    setShowIntro(false);
+                    playBeep(880, 'sine', 0.5);
+                }, 3500);
+                return () => clearTimeout(timer);
             }, []);
+
+            const speak = (text) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = window.speechSynthesis.getVoices();
+                utterance.voice = voices.find(v => v.lang.includes('es')) || voices[0];
+                utterance.pitch = 0.8;
+                utterance.rate = 1.1;
+                window.speechSynthesis.speak(utterance);
+            };
+
+            const initFirebase = useCallback(async () => {
+                // Cargar desde LocalStorage siempre como base/fallback
+                const localData = JSON.parse(localStorage.getItem(`${appId}_guests`) || '[]');
+                setAttendees(localData);
+
+                if (!window.FirebaseCore || typeof __firebase_config === 'undefined') return;
+                try {
+                    const { initializeApp, getFirestore, getAuth, signInAnonymously, onAuthStateChanged } = window.FirebaseCore;
+                    const config = JSON.parse(__firebase_config);
+                    const app = initializeApp(config);
+                    const auth = getAuth(app);
+                    const firestore = getFirestore(app);
+                    setDb(firestore);
+                    await signInAnonymously(auth);
+                    onAuthStateChanged(auth, setUser);
+                } catch (e) { console.warn("Firebase offline mode."); }
+            }, [appId]);
+
+            useEffect(() => {
+                initFirebase();
+            }, [initFirebase]);
+
+            // Particle Engine
+            useEffect(() => {
+                const canvas = document.getElementById('particle-canvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let particles = [];
+                const particleCount = 50;
+
+                const initParticles = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    particles = [];
+                    for (let i = 0; i < particleCount; i++) {
+                        particles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            size: Math.random() * 2,
+                            speedX: (Math.random() - 0.5) * 0.5,
+                            speedY: (Math.random() - 0.5) * 0.5,
+                        });
+                    }
+                };
+
+                const drawParticles = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = theme === 'elite' ? 'rgba(255, 204, 0, 0.3)' : theme === 'overload' ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 242, 255, 0.3)';
+                    particles.forEach(p => {
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+                        if (p.x < 0) p.x = canvas.width;
+                        if (p.x > canvas.width) p.x = 0;
+                        if (p.y < 0) p.y = canvas.height;
+                        if (p.y > canvas.height) p.y = 0;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    requestAnimationFrame(drawParticles);
+                };
+
+                window.addEventListener('resize', initParticles);
+                initParticles();
+                drawParticles();
+                return () => window.removeEventListener('resize', initParticles);
+            }, [theme]);
 
             const playBeep = (freq = 440, type = 'sine', duration = 0.1) => {
                 try {
@@ -587,19 +634,32 @@
                     });
                     const data = await res.json();
                     if (data.error) {
-                        console.error("Gemini Error:", data.error);
-                        return `Error API: ${data.error.message || 'Error desconocido'}`;
+                        console.error("API Error:", data.error.message);
+                        return null; // Trigger fallback
                     }
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!text) {
-                        console.warn("No text in candidates:", data);
-                        return "La IA no devolvió respuesta. Reintenta.";
-                    }
-                    return text;
+                    return text || null;
                 } catch (e) {
                     console.error("Connection Error:", e);
-                    return `Error de conexión: ${e.message}`;
+                    return null; // Return null to trigger fallback
                 }
+            };
+
+            const getRandomFallback = (type) => {
+                const toasts = [
+                    "¡Brindemos por 56 años de trayectoria estelar y muchos más por venir!",
+                    "¡Que la energía del cosmos ilumine este nuevo ciclo de vida! ¡Salud!",
+                    "¡Por una vida llena de misiones cumplidas y nuevos horizontes por descubrir!",
+                    "¡Sincronizando copas para un brindis intergaláctico! ¡Felicidades Osiany!"
+                ];
+                const responses = [
+                    "Mensaje recibido. Procesando coordenadas de celebración. Acceso concedido.",
+                    "Transmisión captada. Protocolo de amistad activado. ¡Nos vemos en la base!",
+                    "Datos validados. Tu presencia ha sido registrada en el manifiesto principal.",
+                    "Conexión establecida. Los sistemas celebran tu confirmación. ¡Bienvenido!"
+                ];
+                const list = type === 'toast' ? toasts : responses;
+                return list[Math.floor(Math.random() * list.length)];
             };
 
 
@@ -607,16 +667,30 @@
             const processLog = async () => {
                 if (!guestMessage.trim()) return;
                 setIsProcessingAI(true);
-                const res = await callGemini(`Mensaje de invitado: "${guestMessage}". Responde como una IA táctica de celebración asignando un código de acceso único.`, "Protocolo Osiany 56.");
-                setAiLogResponse(res);
+                let res = await callGemini(`Mensaje de invitado: "${guestMessage}". Responde como una IA táctica de celebración asignando un código de acceso único.`, "Protocolo Osiany 56.");
+
+                if (!res || res.includes('Error API')) {
+                    res = getRandomFallback('response');
+                }
+
+                const cleanRes = res.replace(/[\*|>]/g, '');
+                setAiLogResponse(cleanRes);
+                speak(cleanRes);
                 setIsProcessingAI(false);
             };
 
             const handleToast = async () => {
                 setIsProcessingAI(true);
                 setGalacticToast('Sincronizando con el cosmos...');
-                const res = await callGemini("Genera un brindis corto, muy futurista y festivo para los 56 años de Osiany.", "Eres un sintetizador de poesía cibernética.");
-                setGalacticToast(res);
+                let res = await callGemini("Genera un brindis corto, muy futurista y festivo para los 56 años de Osiany.", "Eres un sintetizador de poesía cibernética.");
+
+                if (!res || res.includes('Error API')) {
+                    res = getRandomFallback('toast');
+                }
+
+                const cleanRes = res.replace(/[\*|>]/g, '');
+                setGalacticToast(cleanRes);
+                speak(cleanRes);
                 setIsProcessingAI(false);
             };
 
@@ -654,7 +728,52 @@
             };
 
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-4 relative pb-24">
+                <div className="min-h-screen flex flex-col items-center justify-center p-4 relative pb-24 transition-colors duration-500">
+                    {/* Splash Intro - Biometric */}
+                    {showIntro && (
+                        <div className="fixed inset-0 z-[500] bg-black flex flex-col items-center justify-center animate-out fade-out duration-1000 delay-[3000]">
+                            <div className="relative w-80 h-80 border-4 border-[#00f2ff]/20 rounded-full flex items-center justify-center mb-8">
+                                <div className="absolute inset-0 border-t-4 border-[#00f2ff] rounded-full animate-spin"></div>
+                                <img src="FELICIDADES II.png" className="w-72 h-72 object-contain animate-pulse" alt="Biometric Scanned Object" />
+                            </div>
+                            <div className="h-0.5 w-64 bg-white/10 relative overflow-hidden mb-4">
+                                <div className="absolute inset-0 bg-[#00f2ff] animate-[scan-y_2s_infinite]"></div>
+                            </div>
+                            <p className="font-mono-robot text-[#00f2ff] animate-pulse uppercase tracking-[0.5em] text-xs">Escaneo de ADN en curso...</p>
+                        </div>
+                    )}
+
+                    {/* Theme Toggler */}
+                    <div className="fixed top-4 right-4 z-50 flex gap-2">
+                        {['neural', 'overload', 'elite'].map(t => (
+                            <button key={t} onClick={() => { playBeep(500); setTheme(t); }} className={`w-8 h-8 rounded-full border-2 transition-all ${theme === t ? 'scale-125 border-white' : 'border-white/20'}`} style={{ backgroundColor: t === 'neural' ? '#00f2ff' : t === 'overload' ? '#ff0000' : '#ffcc00' }} title={t.toUpperCase()}></button>
+                        ))}
+                    </div>
+
+                    {/* Gift Capsule - Supply Stash */}
+                    <div className="fixed bottom-32 right-6 z-40">
+                        <button onClick={() => { playBeep(1200); setShowGiftModal(true); }} className="w-14 h-14 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all animate-bounce">
+                            <GiftIcon className="w-6 h-6 text-[#bd13fe]" />
+                        </button>
+                    </div>
+
+                    {showGiftModal && (
+                        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-in zoom-in">
+                            <div className="bg-[#0a0f1a] border-2 border-[#bc13fe] p-8 max-w-sm w-full rounded-sm">
+                                <h3 className="text-2xl font-black text-white italic mb-2 uppercase text-center text-glow-purple">Cápsula de Suministros</h3>
+                                <div className="h-1 w-20 bg-[#bc13fe] mx-auto mb-6"></div>
+                                <div className="space-y-4 text-center font-mono-robot text-sm text-white/80">
+                                    <p>PROTOCOLOS DE APOYO ACTIVOS</p>
+                                    <p className="border border-white/10 p-4 bg-white/5">
+                                        MESA DE REGALOS: LIVERPOOL<br />
+                                        CÓDIGO: 51234456
+                                    </p>
+                                    <p className="text-xs italic uppercase">O lluvia de sobres durante el brindis central.</p>
+                                </div>
+                                <button onClick={() => setShowGiftModal(false)} className="w-full mt-8 py-3 bg-[#bc13fe] text-white font-black uppercase tracking-widest translate-y-1 hover:translate-y-0 transition-all">Cerrar Protocolo</button>
+                            </div>
+                        </div>
+                    )}
                     {/* Floating Controls */}
                     <button onClick={() => setView(view === 'invite' ? 'crew' : 'invite')} className="fixed top-4 left-4 z-50 p-3 bg-black/50 border border-[#00f2ff]/30 rounded-full text-[#00f2ff] hover:bg-[#00f2ff] hover:text-black transition-all">
                         {view === 'invite' ? <UsersIcon className="w-6 h-6" /> : <HomeIcon className="w-6 h-6" />}
